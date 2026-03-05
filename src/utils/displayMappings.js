@@ -1,0 +1,38 @@
+/**
+ * Display value mappings for normalizing data.
+ * 
+ * Maps old/variant values to canonical display values.*
+ * Note: Keep in sync with server/displayMappings.js!
+ */
+
+const mappings = {
+  status: {
+    'Pass': 'Passed',
+    'Fail': 'Failed',
+    'Failed: Intended': 'Intended deviation',
+  },
+  group: {
+    // Example: 'old-group-name': 'new-group-name',
+  },
+  type: {
+    // Example: 'OldTypeName': 'NewTypeName',
+  },
+  errorType: {
+    'Known, intended behaviour that does not comply with SPARQL standard': 'Intended deviation from SPARQL standard',
+    'RESULTS NOT THE SAME': 'Results differ',
+  },
+};
+
+/**
+ * Normalize a display value using the mappings.
+ * Returns the mapped value if found, otherwise the original value.
+ * 
+ * @param {string} field - The field name (status, group, type, errorType)
+ * @param {string} value - The raw value from the JSON
+ * @returns {string} The normalized display value
+ */
+export function normalizeDisplayValue(field, value) {
+  const fieldMappings = mappings[field];
+  if (!fieldMappings) return value;
+  return fieldMappings[value] ?? value;
+}
