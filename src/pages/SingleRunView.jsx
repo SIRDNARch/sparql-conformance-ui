@@ -3,6 +3,7 @@ import { useParams, Link, useLocation } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
 import { extractTestRows } from '../utils/extractRows';
 import TestDetails from '../components/TestDetails';
+import CommitShaLink from '../components/CommitShaLink';
 
 export default function SingleRunView() {
   const { id } = useParams();
@@ -601,9 +602,12 @@ function RunInfoCard({ run, singleRunView = false }) {
             </span>
           </>
         )}
-        <code className="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
-          {run.commit_sha ? run.commit_sha.substring(0, 8) : 'no-sha'}
-        </code>
+        <CommitShaLink
+          repoFullName={run.repo_full_name}
+          commitSha={run.commit_sha}
+          linkClassName="text-xs text-blue-700 hover:text-blue-900 hover:underline font-mono bg-gray-100 px-2 py-1 rounded"
+          codeClassName="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded"
+        />
         {run.pr_number && (
           <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded">
             PR #{run.pr_number}

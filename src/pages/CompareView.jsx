@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
 import { extractTestRows } from '../utils/extractRows';
 import CompareTestDetails from '../components/CompareTestDetails';
+import CommitShaLink from '../components/CommitShaLink';
 
 export default function CompareView() {
   const { id1, id2 } = useParams();
@@ -600,9 +601,13 @@ function RunInfoCard({ run, onClick, isLatest }) {
               </span>
             </>
           )}
-          <code className="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
-            {run.commit_sha ? run.commit_sha.substring(0, 8) : 'no-sha'}
-          </code>
+          <CommitShaLink
+            repoFullName={run.repo_full_name}
+            commitSha={run.commit_sha}
+            stopPropagation={true}
+            linkClassName="text-xs text-blue-700 hover:text-blue-900 hover:underline font-mono bg-gray-100 px-2 py-1 rounded"
+            codeClassName="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded"
+          />
           {(run.head_ref || run.ref_name) && (
             <span className="text-xs text-gray-500">
               on <span className="font-medium">{run.head_ref || run.ref_name}</span>

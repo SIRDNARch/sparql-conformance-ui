@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
+import CommitShaLink from '../components/CommitShaLink';
 
 export default function SearchPage() {
   const [appMode, setAppMode] = useState(null);
@@ -346,9 +347,13 @@ export default function SearchPage() {
 
                         {/* Commit SHA and Ref */}
                         <div className="flex items-center gap-3 mb-2">
-                          <code className="text-sm text-gray-600 font-mono">
-                            {run.commit_sha ? run.commit_sha.substring(0, 8) : 'no-sha'}
-                          </code>
+                          <CommitShaLink
+                            repoFullName={run.repo_full_name}
+                            commitSha={run.commit_sha}
+                            stopPropagation={true}
+                            linkClassName="text-sm text-blue-700 hover:text-blue-900 hover:underline font-mono"
+                            codeClassName="text-sm text-gray-600 font-mono"
+                          />
                           {(run.head_ref || run.ref_name) && (
                             <span className="text-sm text-gray-500">
                               <span className="text-gray-400">on</span>{' '}
