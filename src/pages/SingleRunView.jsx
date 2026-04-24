@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
-import { extractTestRows } from '../utils/extractRows';
+import { extractTestRows, getFullTestData } from '../utils/extractRows';
+import { normalizeDisplayValue } from '../utils/displayMappings';
 import TestDetails from '../components/TestDetails';
 import CommitShaLink from '../components/CommitShaLink';
 
@@ -21,6 +22,7 @@ export default function SingleRunView() {
   // Filter states, using Sets for multi-select
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
+    suite: new Set(),
     group: new Set(),
     type: new Set(),
     status: new Set(),
@@ -206,12 +208,16 @@ export default function SingleRunView() {
   };
 
   const handleRowClick = (row) => {
-    // Get full test data from run.results_json
-    const fullTestData = run?.results_json?.[row.testName];
+    const fullTestData = run?.results_json
+      ? getFullTestData(run.results_json, row.suite, row.testName)
+      : null;
     if (fullTestData) {
       setSelectedTest({ ...fullTestData, testName: row.testName });
     }
   };
+
+  const distinctSuites = new Set(testData.map(r => r.suite));
+  const showSuiteFilter = distinctSuites.size > 1;
 
   // Stats - values are already normalized via extractTestRows (see displayMappings.js)
   const stats = {
@@ -335,6 +341,18 @@ export default function SingleRunView() {
 
               {/* Filter Rows - Column name on left, checkboxes on right */}
               <div className="space-y-4">
+                {showSuiteFilter && (
+                  <FilterRow
+                    label="Suite"
+                    filterKey="suite"
+                    selectedValues={filters.suite}
+                    allOptions={getAllOptions('suite')}
+                    availableOptions={getAvailableOptions('suite')}
+                    onChange={handleFilterToggle}
+                    displayValue={(v) => normalizeDisplayValue('suite', v)}
+                  />
+                )}
+
                 <FilterRow
                   label="Group"
                   filterKey="group"
@@ -382,6 +400,9 @@ export default function SingleRunView() {
               <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
                   <TableHeader label="Test Name" sortKey="testName" sortConfig={sortConfig} onSort={handleSort} />
+                  {showSuiteFilter && (
+                    <TableHeader label="Suite" sortKey="suite" sortConfig={sortConfig} onSort={handleSort} />
+                  )}
                   <TableHeader label="Group" sortKey="group" sortConfig={sortConfig} onSort={handleSort} />
                   <TableHeader label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} />
                   <TableHeader label="Status" sortKey="status" sortConfig={sortConfig} onSort={handleSort} />
@@ -398,6 +419,9 @@ export default function SingleRunView() {
                     }`}
                   >
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{row.testName}</td>
+                    {showSuiteFilter && (
+                      <td className="px-4 py-3 text-sm text-gray-600">{normalizeDisplayValue('suite', row.suite)}</td>
+                    )}
                     <td className="px-4 py-3 text-sm text-gray-600">{row.group}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{row.type}</td>
                     <td className="px-4 py-3">
@@ -479,7 +503,7 @@ function StatusBadge({ status }) {
 }
 
 // Filter Row Component - Column name on left, checkboxes on right
-function FilterRow({ label, filterKey, selectedValues, allOptions, availableOptions, onChange }) {
+function FilterRow({ label, filterKey, selectedValues, allOptions, availableOptions, onChange, displayValue }) {
   const hasOptions = allOptions.length > 0;
   const availableCount = availableOptions.size;
   
@@ -554,7 +578,7 @@ function FilterRow({ label, filterKey, selectedValues, allOptions, availableOpti
                   <span className={`ml-2 text-sm ${
                     !isAvailable && !isSelected ? 'text-gray-400' : 'text-gray-700'
                   }`}>
-                    {option}
+                    {displayValue ? displayValue(option) : option}
                   </span>
                 </label>
               );

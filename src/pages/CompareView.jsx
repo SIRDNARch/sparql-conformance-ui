@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
-import { extractTestRows } from '../utils/extractRows';
+import { extractTestRows, getFullTestData } from '../utils/extractRows';
+import { normalizeDisplayValue } from '../utils/displayMappings';
 import CompareTestDetails from '../components/CompareTestDetails';
 import CommitShaLink from '../components/CommitShaLink';
 
@@ -24,6 +25,7 @@ export default function CompareView() {
   // Filter states using Sets for multi-select
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
+    suite: new Set(),
     group: new Set(),
     type: new Set(),
     status1: new Set(),
@@ -145,14 +147,16 @@ export default function CompareView() {
         const tests1 = extractTestRows(run1.results_json);
         const tests2 = extractTestRows(run2.results_json);
 
-        const map1 = new Map(tests1.map(t => [t.testName, t]));
-        const map2 = new Map(tests2.map(t => [t.testName, t]));
-        const allTestNames = new Set([...map1.keys(), ...map2.keys()]);
+        // Use suite:testName as key to avoid collisions when suites share test names
+        const map1 = new Map(tests1.map(t => [`${t.suite}:${t.testName}`, t]));
+        const map2 = new Map(tests2.map(t => [`${t.suite}:${t.testName}`, t]));
+        const allKeys = new Set([...map1.keys(), ...map2.keys()]);
 
         const rows = [];
-        for (const testName of allTestNames) {
-          const test1 = map1.get(testName); // run1 = newer/current (left side)
-          const test2 = map2.get(testName); // run2 = older/previous (right side)
+        for (const key of allKeys) {
+          const test1 = map1.get(key); // run1 = newer/current (left side)
+          const test2 = map2.get(key); // run2 = older/previous (right side)
+          const testName = test1?.testName ?? test2?.testName ?? key;
 
           let changeType = 'unchanged';
           let statusChange = '';
@@ -193,6 +197,7 @@ export default function CompareView() {
 
           rows.push({
             testName,
+            suite: test2?.suite || test1?.suite || '',
             group: test2?.group || test1?.group || '',
             type: test2?.type || test1?.type || '',
             status1: test1?.status || 'N/A',
@@ -311,17 +316,21 @@ export default function CompareView() {
   };
 
   const handleRowClick = (row) => {
-    // Get full test data from both runs
-    const test1 = run1?.results_json?.[row.testName];
-    const test2 = run2?.results_json?.[row.testName];
-    
-    // Store both tests with testName
+    const test1Raw = run1?.results_json
+      ? getFullTestData(run1.results_json, row.suite, row.testName)
+      : null;
+    const test2Raw = run2?.results_json
+      ? getFullTestData(run2.results_json, row.suite, row.testName)
+      : null;
     setSelectedTest({
-      test1: test1 ? { ...test1, testName: row.testName } : null,
-      test2: test2 ? { ...test2, testName: row.testName } : null,
+      test1: test1Raw ? { ...test1Raw, testName: row.testName } : null,
+      test2: test2Raw ? { ...test2Raw, testName: row.testName } : null,
       testName: row.testName
     });
   };
+
+  const distinctSuites = new Set(comparisonData.map(r => r.suite));
+  const showSuiteFilter = distinctSuites.size > 1;
 
   // Stats for display
   const stats = {
@@ -447,6 +456,18 @@ export default function CompareView() {
 
               {/* Filter Rows - Column name on left, checkboxes on right */}
               <div className="space-y-4">
+                {showSuiteFilter && (
+                  <FilterRow
+                    label="Suite"
+                    filterKey="suite"
+                    selectedValues={filters.suite}
+                    allOptions={getAllOptions('suite')}
+                    availableOptions={getAvailableOptions('suite')}
+                    onChange={handleFilterToggle}
+                    displayValue={(v) => normalizeDisplayValue('suite', v)}
+                  />
+                )}
+
                 <FilterRow
                   label="Group"
                   filterKey="group"
@@ -512,6 +533,9 @@ export default function CompareView() {
               <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
                   <TableHeader label="Test Name" sortKey="testName" sortConfig={sortConfig} onSort={handleSort} />
+                  {showSuiteFilter && (
+                    <TableHeader label="Suite" sortKey="suite" sortConfig={sortConfig} onSort={handleSort} />
+                  )}
                   <TableHeader label="Group" sortKey="group" sortConfig={sortConfig} onSort={handleSort} />
                   <TableHeader label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} />
                   <TableHeader label="Status (Run 1)" sortKey="status1" sortConfig={sortConfig} onSort={handleSort} />
@@ -530,6 +554,9 @@ export default function CompareView() {
                     }`}
                   >
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{row.testName}</td>
+                    {showSuiteFilter && (
+                      <td className="px-4 py-3 text-sm text-gray-600">{normalizeDisplayValue('suite', row.suite)}</td>
+                    )}
                     <td className="px-4 py-3 text-sm text-gray-600">{row.group}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{row.type}</td>
                     <td className="px-4 py-3">
@@ -756,7 +783,7 @@ function ChangeBadge({ changeType }) {
 }
 
 // Filter Row Component - Column name on left, checkboxes on right
-function FilterRow({ label, filterKey, selectedValues, allOptions, availableOptions, onChange }) {
+function FilterRow({ label, filterKey, selectedValues, allOptions, availableOptions, onChange, displayValue }) {
   const hasOptions = allOptions.length > 0;
   const availableCount = availableOptions.size;
   
@@ -831,7 +858,7 @@ function FilterRow({ label, filterKey, selectedValues, allOptions, availableOpti
                   <span className={`ml-2 text-sm ${
                     !isAvailable && !isSelected ? 'text-gray-400' : 'text-gray-700'
                   }`}>
-                    {option}
+                    {displayValue ? displayValue(option) : option}
                   </span>
                 </label>
               );

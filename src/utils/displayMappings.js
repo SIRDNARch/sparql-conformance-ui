@@ -21,6 +21,11 @@ const mappings = {
     'Known, intended behaviour that does not comply with SPARQL standard': 'Intended deviation from SPARQL standard',
     'RESULTS NOT THE SAME': 'Results differ',
   },
+  suite: {
+    'sparql11': 'SPARQL 1.1',
+    'sparql10': 'SPARQL 1.0',
+    'custom': 'Custom',
+  },
 };
 
 /**
