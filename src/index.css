@@ -5,9 +5,9 @@
 /* optional: nice defaults */
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
   }
-  body { @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100; }
+  body { @apply bg-gray-50 text-gray-900; }
 }
 
 /* Styles for HTML-rendered test result content */

@@ -1,5 +1,17 @@
 import { normalizeDisplayValue } from './displayMappings';
 
+function resolveStatus(rawStatus, rawErrorType, rawIntended) {
+  const statusLower = String(rawStatus ?? '').toLowerCase().trim();
+  const errorTypeLower = String(rawErrorType ?? '').toLowerCase();
+  const isIntended =
+    statusLower === 'intended' ||
+    statusLower === 'failed: intended' ||
+    errorTypeLower.includes('intended') ||
+    rawIntended === true;
+  if (isIntended) return 'Intended deviation';
+  return normalizeDisplayValue('status', String(rawStatus ?? ''));
+}
+
 export function extractTestRows(raw) {
   if ("version" in raw) {
     // v2 multi-suite format
@@ -12,7 +24,7 @@ export function extractTestRows(raw) {
           suite: suiteKey,
           group: normalizeDisplayValue('group', String(value.group ?? "")),
           type: normalizeDisplayValue('type', String(value.typeName ?? value.type ?? "")),
-          status: normalizeDisplayValue('status', String(value.status ?? "")),
+          status: resolveStatus(value.status, value.errorType, value.intended),
           errorType: normalizeDisplayValue('errorType', String(value.errorType ?? "")),
         });
       }
@@ -30,7 +42,7 @@ export function extractTestRows(raw) {
       suite: "sparql11",
       group: normalizeDisplayValue('group', String(value.group ?? "")),
       type: normalizeDisplayValue('type', String(value.typeName ?? value.type ?? "")),
-      status: normalizeDisplayValue('status', String(value.status ?? "")),
+      status: resolveStatus(value.status, value.errorType, value.intended),
       errorType: normalizeDisplayValue('errorType', String(value.errorType ?? "")),
     });
   }

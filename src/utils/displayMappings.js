@@ -10,6 +10,7 @@ const mappings = {
     'Pass': 'Passed',
     'Fail': 'Failed',
     'Failed: Intended': 'Intended deviation',
+    'Intended': 'Intended deviation',
   },
   group: {
     // Example: 'old-group-name': 'new-group-name',

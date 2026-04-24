@@ -15,7 +15,7 @@ export default function FieldValueRenderer({
   }
 
   const htmlContent = entry.value;
-  const wrapperClass = `html-content bg-gray-100 p-3 rounded border overflow-auto`;
+  const wrapperClass = `html-content bg-gray-100 text-gray-900 p-3 rounded border overflow-auto`;
   
   const isResult = isResultField(entry.key);
   
