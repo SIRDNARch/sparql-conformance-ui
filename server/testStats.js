@@ -12,15 +12,23 @@ export function calculateTestStats(resultsJson) {
     skipped: 0,
   };
 
-  for (const [key, test] of Object.entries(resultsJson || {})) {
-    if (key === 'info' || !test || typeof test !== 'object' || Array.isArray(test)) {
-      continue;
+  const tests = [];
+  if (resultsJson && 'version' in resultsJson) {
+    for (const suite of Object.values(resultsJson.suites ?? {})) {
+      for (const test of Object.values(suite.tests ?? {})) {
+        if (test && typeof test === 'object' && !Array.isArray(test)) tests.push(test);
+      }
     }
+  } else {
+    for (const [key, test] of Object.entries(resultsJson || {})) {
+      if (key === 'info' || !test || typeof test !== 'object' || Array.isArray(test)) continue;
+      tests.push(test);
+    }
+  }
 
+  for (const test of tests) {
     const status = String(test.status || '').toLowerCase().trim();
-    if (!status) {
-      continue;
-    }
+    if (!status) continue;
 
     stats.total += 1;
 

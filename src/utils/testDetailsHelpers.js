@@ -40,18 +40,26 @@ export function getOverviewEntries(test) {
   const typeName = test.typeName || test.type;
 
   if (typeName === "QueryEvaluationTest" || typeName === "CSVResultFormatTest" || typeName === "UpdateEvaluationTest") {
-    let queryResult, expectedResult;
-    
-    const showExpectedAndResult = test.status !== "Failed" 
-      || test.errorType === "RESULTS NOT THE SAME" || test.errorType === "QUERY RESULT FORMAT ERROR" 
+    let queryResult, expectedResult, resultsAreHtml;
+
+    const showExpectedAndResult = test.status !== "Failed"
+      || test.errorType === "RESULTS NOT THE SAME" || test.errorType === "QUERY RESULT FORMAT ERROR"
       || test.errorType === "Results differ" || test.errorType === "Result format error"
     if (showExpectedAndResult) {
-      // Always use the full HTML version, the toggles will control what's visible
-      queryResult = test.gotHtml;
-      expectedResult = test.expectedHtml;
+      // Prefer HTML diff view; fall back to raw files when HTML is not available
+      if (test.gotHtml || test.expectedHtml) {
+        queryResult = test.gotHtml;
+        expectedResult = test.expectedHtml;
+        resultsAreHtml = true;
+      } else {
+        queryResult = test.queryLog;
+        expectedResult = test.resultFile;
+        resultsAreHtml = false;
+      }
     } else {
       queryResult = test.queryLog;
       expectedResult = test.resultFile;
+      resultsAreHtml = false;
     }
 
     entries.push({
@@ -70,13 +78,13 @@ export function getOverviewEntries(test) {
       label: "Expected Result",
       value: expectedResult,
       key: "expectedResult",
-      isHtml: true
+      isHtml: resultsAreHtml
     });
     entries.push({
       label: "Query Result",
       value: queryResult,
       key: "queryResult",
-      isHtml: true
+      isHtml: resultsAreHtml
     });
   } else if (typeName === "PositiveSyntaxTest11" || typeName === "NegativeSyntaxTest11" || 
              typeName === "PositiveUpdateSyntaxTest11" || typeName === "NegativeUpdateSyntaxTest11") {
