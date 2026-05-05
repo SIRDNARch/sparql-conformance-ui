@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
+import RunStatsDisplay from '../components/RunStatsDisplay';
 
 export default function ManualEngineRunsPage() {
   const navigate = useNavigate();
@@ -130,7 +131,6 @@ export default function ManualEngineRunsPage() {
             <div className="divide-y divide-gray-200">
               {runs.map((run) => {
                 const isSelected = selectedRuns.some((r) => r.id === run.id);
-                const passRate = run.total > 0 ? ((run.passed / run.total) * 100).toFixed(1) : '0.0';
 
                 return (
                   <div
@@ -163,19 +163,10 @@ export default function ManualEngineRunsPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="text-gray-600"><span className="font-semibold text-green-600">{run.passed}</span> passed</span>
-                          <span className="text-gray-600"><span className="font-semibold text-red-600">{run.failed}</span> failed</span>
-                          {run.intended > 0 && (
-                            <span className="text-gray-600"><span className="font-semibold text-yellow-600">{run.intended}</span> intended</span>
-                          )}
-                          <span className="text-gray-600"><span className="font-semibold">{run.total}</span> total</span>
-                          <span className={`font-semibold ${
-                            parseFloat(passRate) >= 80 ? 'text-green-600' : parseFloat(passRate) >= 50 ? 'text-yellow-600' : 'text-red-600'
-                          }`}>
-                            {passRate}% pass rate
-                          </span>
-                        </div>
+                        <RunStatsDisplay
+                          variant="inline"
+                          stats={{ total: run.total, passed: run.passed, failed: run.failed, intended: run.intended || 0 }}
+                        />
                       </div>
 
                       <div className="flex flex-col items-end gap-2 ml-4">

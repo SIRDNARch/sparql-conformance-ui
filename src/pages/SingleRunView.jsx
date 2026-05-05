@@ -5,6 +5,7 @@ import { extractTestRows, getFullTestData } from '../utils/extractRows';
 import { normalizeDisplayValue } from '../utils/displayMappings';
 import TestDetails from '../components/TestDetails';
 import CommitShaLink from '../components/CommitShaLink';
+import RunStatsDisplay from '../components/RunStatsDisplay';
 
 export default function SingleRunView() {
   const { id } = useParams();
@@ -227,15 +228,13 @@ export default function SingleRunView() {
     intended: testData.filter(t => t.status === 'Intended deviation').length,
   };
 
-  const suiteStats = showSuiteFilter
-    ? [...distinctSuites].sort().map(suite => ({
-        suite,
-        total:    testData.filter(t => t.suite === suite).length,
-        passed:   testData.filter(t => t.suite === suite && t.status === 'Passed').length,
-        failed:   testData.filter(t => t.suite === suite && t.status === 'Failed').length,
-        intended: testData.filter(t => t.suite === suite && t.status === 'Intended deviation').length,
-      }))
-    : [];
+  const suiteStats = [...distinctSuites].sort().map(suite => ({
+    suite,
+    total:    testData.filter(t => t.suite === suite).length,
+    passed:   testData.filter(t => t.suite === suite && t.status === 'Passed').length,
+    failed:   testData.filter(t => t.suite === suite && t.status === 'Failed').length,
+    intended: testData.filter(t => t.suite === suite && t.status === 'Intended deviation').length,
+  }));
 
   if (loading) {
     return (
@@ -301,40 +300,9 @@ export default function SingleRunView() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-3">
-          <StatCard label="Total Tests" value={stats.total} color="gray" />
-          <StatCard label="Passed" value={stats.passed} color="green" />
-          <StatCard label="Intended Deviation" value={stats.intended} color="yellow" />
-          <StatCard label="Failed" value={stats.failed} color="red" />
+        <div className="mb-6">
+          <RunStatsDisplay variant="cards" stats={stats} suiteStats={suiteStats} />
         </div>
-
-        {/* Per-suite breakdown (only shown when multiple suites present) */}
-        {suiteStats.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm mb-6 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-2 text-left font-medium text-gray-600">Suite</th>
-                  <th className="px-4 py-2 text-right font-medium text-gray-600">Total</th>
-                  <th className="px-4 py-2 text-right font-medium text-green-700">Passed</th>
-                  <th className="px-4 py-2 text-right font-medium text-yellow-700">Intended</th>
-                  <th className="px-4 py-2 text-right font-medium text-red-700">Failed</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {suiteStats.map(s => (
-                  <tr key={s.suite} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 font-medium text-gray-800">{normalizeDisplayValue('suite', s.suite)}</td>
-                    <td className="px-4 py-2 text-right text-gray-700">{s.total}</td>
-                    <td className="px-4 py-2 text-right text-green-700">{s.passed}</td>
-                    <td className="px-4 py-2 text-right text-yellow-700">{s.intended}</td>
-                    <td className="px-4 py-2 text-right text-red-700">{s.failed}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm mb-6">
@@ -486,22 +454,6 @@ export default function SingleRunView() {
 }
 
 // Helper Components
-function StatCard({ label, value, color }) {
-  const colorClasses = {
-    gray: 'bg-gray-100 text-gray-800',
-    green: 'bg-green-100 text-green-800',
-    red: 'bg-red-100 text-red-800',
-    yellow: 'bg-yellow-100 text-yellow-800',
-  };
-
-  return (
-    <div className={`rounded-lg p-4 ${colorClasses[color]}`}>
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-sm font-medium">{label}</div>
-    </div>
-  );
-}
-
 function TableHeader({ label, sortKey, sortConfig, onSort }) {
   const isSorted = sortConfig.key === sortKey;
   

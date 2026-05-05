@@ -5,6 +5,7 @@ import { extractTestRows, getFullTestData } from '../utils/extractRows';
 import { normalizeDisplayValue } from '../utils/displayMappings';
 import CompareTestDetails from '../components/CompareTestDetails';
 import CommitShaLink from '../components/CommitShaLink';
+import RunStatsDisplay from '../components/RunStatsDisplay';
 
 export default function CompareView() {
   const { id1, id2 } = useParams();
@@ -16,6 +17,8 @@ export default function CompareView() {
   const [run1IsLatest, setRun1IsLatest] = useState(false);
   const [run2IsLatest, setRun2IsLatest] = useState(false);
   const [comparisonData, setComparisonData] = useState([]);
+  const [run1Stats, setRun1Stats] = useState(null);
+  const [run2Stats, setRun2Stats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
@@ -147,6 +150,20 @@ export default function CompareView() {
         const tests1 = extractTestRows(run1.results_json);
         const tests2 = extractTestRows(run2.results_json);
 
+        const computeRunStats = (tests) => {
+          const suites = [...new Set(tests.map(t => t.suite))].sort();
+          return {
+            intended: tests.filter(t => t.status === 'Intended deviation').length,
+            suiteStats: suites.map(suite => ({
+              suite,
+              total:    tests.filter(t => t.suite === suite).length,
+              passed:   tests.filter(t => t.suite === suite && t.status === 'Passed').length,
+              failed:   tests.filter(t => t.suite === suite && t.status === 'Failed').length,
+              intended: tests.filter(t => t.suite === suite && t.status === 'Intended deviation').length,
+            })),
+          };
+        };
+
         // Use suite:testName as key to avoid collisions when suites share test names
         const map1 = new Map(tests1.map(t => [`${t.suite}:${t.testName}`, t]));
         const map2 = new Map(tests2.map(t => [`${t.suite}:${t.testName}`, t]));
@@ -213,6 +230,8 @@ export default function CompareView() {
 
         if (!cancelled) {
           setComparisonData(rows);
+          setRun1Stats(computeRunStats(tests1));
+          setRun2Stats(computeRunStats(tests2));
           setProcessing(false);
         }
       } catch (err) {
@@ -389,14 +408,16 @@ export default function CompareView() {
 
         {/* Run Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <RunInfoCard 
-            run={run1} 
+          <RunInfoCard
+            run={run1}
+            computedStats={run1Stats}
             runNumber={1}
             onClick={() => navigate(`/run/${id1}`, { state: { from: backPath } })}
             isLatest={run1IsLatest}
           />
-          <RunInfoCard 
-            run={run2} 
+          <RunInfoCard
+            run={run2}
+            computedStats={run2Stats}
             runNumber={2}
             onClick={() => navigate(`/run/${id2}`, { state: { from: backPath } })}
             isLatest={run2IsLatest}
@@ -592,7 +613,7 @@ export default function CompareView() {
 }
 
 // Helper Components
-function RunInfoCard({ run, onClick, isLatest }) {
+function RunInfoCard({ run, computedStats = null, onClick, isLatest }) {
   if (!run) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-5 border-2 border-gray-200">
@@ -601,14 +622,16 @@ function RunInfoCard({ run, onClick, isLatest }) {
     );
   }
 
-  const passRate = run.total > 0 
-    ? ((run.passed / run.total) * 100).toFixed(1) 
+  const passRate = run.total > 0
+    ? ((run.passed / run.total) * 100).toFixed(1)
     : '0.0';
   const repoName = String(run.repo_full_name || '').toLowerCase();
   const showEngineMetadata = repoName.startsWith('manual/') || repoName.startsWith('local/');
+  const intendedCount = computedStats?.intended ?? run.intended ?? 0;
+  const suiteStats = computedStats?.suiteStats ?? [];
 
   return (
-    <div 
+    <div
       onClick={onClick}
       className="bg-white rounded-xl shadow-sm p-5 border-2 border-blue-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer"
     >
@@ -660,10 +683,10 @@ function RunInfoCard({ run, onClick, isLatest }) {
             })}
           </span>
           <span className={`text-sm font-semibold ${
-            parseFloat(passRate) >= 80 
-              ? 'text-green-600' 
-              : parseFloat(passRate) >= 50 
-              ? 'text-yellow-600' 
+            parseFloat(passRate) >= 80
+              ? 'text-green-600'
+              : parseFloat(passRate) >= 50
+              ? 'text-yellow-600'
               : 'text-red-600'
           }`}>
             {passRate}%
@@ -674,24 +697,11 @@ function RunInfoCard({ run, onClick, isLatest }) {
 
       {/* Test Statistics */}
       <div className="pt-3 border-t border-gray-200">
-        <div className="grid grid-cols-4 gap-2 text-center">
-          <div>
-            <div className="text-lg font-bold text-gray-900">{run.total}</div>
-            <div className="text-xs text-gray-600">Total</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-green-600">{run.passed}</div>
-            <div className="text-xs text-gray-600">Passed</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-yellow-600">{run.intended || 0}</div>
-            <div className="text-xs text-gray-600">Intended</div>
-          </div>
-          <div>
-            <div className="text-lg font-bold text-red-600">{run.failed}</div>
-            <div className="text-xs text-gray-600">Failed</div>
-          </div>
-        </div>
+        <RunStatsDisplay
+          variant="compact-grid"
+          stats={{ total: run.total, passed: run.passed, failed: run.failed, intended: intendedCount }}
+          suiteStats={suiteStats}
+        />
       </div>
     </div>
   );
