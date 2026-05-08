@@ -72,47 +72,46 @@ export default function RunStatsDisplay({ stats, suiteStats = [], variant = 'inl
     ? ((stats.passed / stats.total) * 100).toFixed(1)
     : '0.0';
 
-  return (
-    <div>
-      <div className={`flex items-center text-sm flex-wrap ${hasSuites ? 'gap-3' : 'gap-4'}`}>
-        {hasSuites && (
-          <span className="font-medium text-gray-500 w-20 shrink-0 text-xs">All</span>
-        )}
-        <span className="text-gray-600">
-          <span className="font-semibold text-green-600">{stats.passed}</span> passed
-        </span>
-        <span className="text-gray-600">
-          <span className="font-semibold text-red-600">{stats.failed}</span> failed
-        </span>
-        <span className="text-gray-600">
-          <span className="font-semibold text-yellow-600">{stats.intended}</span> intended
-        </span>
-        <span className="text-gray-600">
-          <span className="font-semibold">{stats.total}</span> total
-        </span>
-        <span className={`font-semibold ${
-          parseFloat(passRate) >= 80
-            ? 'text-green-600'
-            : parseFloat(passRate) >= 50
-            ? 'text-yellow-600'
-            : 'text-red-600'
-        }`}>
-          {passRate}% pass rate
-        </span>
+  const passRateColor = parseFloat(passRate) >= 80
+    ? 'text-green-600'
+    : parseFloat(passRate) >= 50
+    ? 'text-yellow-600'
+    : 'text-red-600';
+
+  if (!hasSuites) {
+    return (
+      <div className="flex items-center gap-4 text-sm flex-wrap">
+        <span className="text-gray-600"><span className="font-semibold text-green-600">{stats.passed}</span> passed</span>
+        <span className="text-gray-600"><span className="font-semibold text-red-600">{stats.failed}</span> failed</span>
+        <span className="text-gray-600"><span className="font-semibold text-yellow-600">{stats.intended}</span> intended</span>
+        <span className="text-gray-600"><span className="font-semibold">{stats.total}</span> total</span>
+        <span className={`font-semibold ${passRateColor}`}>{passRate}% pass rate</span>
       </div>
-      {hasSuites && (
-        <div className="mt-1 space-y-0.5 pl-1">
-          {suiteStats.map(s => (
-            <div key={s.suite} className="flex items-center gap-3 text-xs text-gray-500">
-              <span className="font-medium text-gray-600 w-20 shrink-0">{normalizeDisplayValue('suite', s.suite)}</span>
-              <span><span className="font-semibold text-green-600">{s.passed}</span> passed</span>
-              <span><span className="font-semibold text-red-600">{s.failed}</span> failed</span>
-              <span><span className="font-semibold text-yellow-600">{s.intended}</span> intended</span>
-              <span><span className="font-semibold text-gray-700">{s.total}</span> total</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    );
+  }
+
+  return (
+    <table className="text-xs border-separate border-spacing-x-3 border-spacing-y-0">
+      <tbody>
+        <tr className="text-sm">
+          <td className="font-medium text-gray-500 pr-1">All</td>
+          <td className="text-gray-600"><span className="font-semibold text-green-600">{stats.passed}</span> passed</td>
+          <td className="text-gray-600"><span className="font-semibold text-red-600">{stats.failed}</span> failed</td>
+          <td className="text-gray-600"><span className="font-semibold text-yellow-600">{stats.intended}</span> intended</td>
+          <td className="text-gray-600"><span className="font-semibold">{stats.total}</span> total</td>
+          <td className={`font-semibold ${passRateColor}`}>{passRate}% pass rate</td>
+        </tr>
+        {suiteStats.map(s => (
+          <tr key={s.suite} className="text-xs text-gray-500">
+            <td className="font-medium text-gray-600">{normalizeDisplayValue('suite', s.suite)}</td>
+            <td><span className="font-semibold text-green-600">{s.passed}</span> passed</td>
+            <td><span className="font-semibold text-red-600">{s.failed}</span> failed</td>
+            <td><span className="font-semibold text-yellow-600">{s.intended}</span> intended</td>
+            <td><span className="font-semibold text-gray-700">{s.total}</span> total</td>
+            <td />
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
