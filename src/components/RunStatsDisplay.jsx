@@ -74,7 +74,10 @@ export default function RunStatsDisplay({ stats, suiteStats = [], variant = 'inl
 
   return (
     <div>
-      <div className="flex items-center gap-4 text-sm flex-wrap">
+      <div className={`flex items-center text-sm flex-wrap ${hasSuites ? 'gap-3' : 'gap-4'}`}>
+        {hasSuites && (
+          <span className="font-medium text-gray-500 w-20 shrink-0 text-xs">All</span>
+        )}
         <span className="text-gray-600">
           <span className="font-semibold text-green-600">{stats.passed}</span> passed
         </span>
