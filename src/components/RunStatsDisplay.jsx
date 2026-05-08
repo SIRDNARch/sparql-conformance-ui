@@ -5,18 +5,20 @@ export default function RunStatsDisplay({ stats, suiteStats = [], variant = 'inl
 
   if (variant === 'cards') {
     const cards = [
-      { label: 'Total Tests',        value: stats.total,    suiteValue: s => s.total,    bg: 'bg-gray-100',   text: 'text-gray-800',  divider: 'border-gray-300',  sub: 'text-gray-500' },
-      { label: 'Passed',             value: stats.passed,   suiteValue: s => s.passed,   bg: 'bg-green-100',  text: 'text-green-800', divider: 'border-green-300', sub: 'text-green-600' },
-      { label: 'Intended Deviation', value: stats.intended, suiteValue: s => s.intended, bg: 'bg-yellow-100', text: 'text-yellow-800',divider: 'border-yellow-300',sub: 'text-yellow-600' },
-      { label: 'Failed',             value: stats.failed,   suiteValue: s => s.failed,   bg: 'bg-red-100',    text: 'text-red-800',   divider: 'border-red-300',   sub: 'text-red-600' },
+      { label: 'Total Tests',        value: stats.total,    suiteValue: s => s.total,    bg: 'bg-gray-100',   text: 'text-gray-800',  divider: 'border-gray-300',  sub: 'text-gray-600' },
+      { label: 'Passed',             value: stats.passed,   suiteValue: s => s.passed,   bg: 'bg-green-100',  text: 'text-green-800', divider: 'border-green-300', sub: 'text-green-700' },
+      { label: 'Intended Deviation', value: stats.intended, suiteValue: s => s.intended, bg: 'bg-yellow-100', text: 'text-yellow-800',divider: 'border-yellow-300',sub: 'text-yellow-700' },
+      { label: 'Failed',             value: stats.failed,   suiteValue: s => s.failed,   bg: 'bg-red-100',    text: 'text-red-800',   divider: 'border-red-300',   sub: 'text-red-700' },
     ];
 
     return (
       <div className="grid grid-cols-4 gap-4">
         {cards.map(card => (
           <div key={card.label} className={`rounded-lg p-4 ${card.bg} ${card.text}`}>
-            <div className="text-2xl font-bold">{card.value}</div>
-            <div className={`text-sm font-medium ${hasSuites ? 'mb-2' : ''}`}>{card.label}</div>
+            <div className="flex justify-between items-baseline mb-1">
+              <span className="text-sm font-medium">{card.label}</span>
+              <span className="text-2xl font-bold">{card.value}</span>
+            </div>
             {hasSuites && (
               <div className={`border-t ${card.divider} pt-2 space-y-1`}>
                 {suiteStats.map(s => (
@@ -35,23 +37,25 @@ export default function RunStatsDisplay({ stats, suiteStats = [], variant = 'inl
 
   if (variant === 'compact-grid') {
     const cols = [
-      { label: 'Total',    value: stats.total,    suiteValue: s => s.total,    color: 'text-gray-900',   subColor: 'text-gray-500' },
-      { label: 'Passed',   value: stats.passed,   suiteValue: s => s.passed,   color: 'text-green-600',  subColor: 'text-green-500' },
-      { label: 'Intended', value: stats.intended, suiteValue: s => s.intended, color: 'text-yellow-600', subColor: 'text-yellow-500' },
-      { label: 'Failed',   value: stats.failed,   suiteValue: s => s.failed,   color: 'text-red-600',    subColor: 'text-red-500' },
+      { label: 'Total',    value: stats.total,    suiteValue: s => s.total,    color: 'text-gray-900',   subColor: 'text-gray-600' },
+      { label: 'Passed',   value: stats.passed,   suiteValue: s => s.passed,   color: 'text-green-600',  subColor: 'text-green-600' },
+      { label: 'Intended', value: stats.intended, suiteValue: s => s.intended, color: 'text-yellow-600', subColor: 'text-yellow-600' },
+      { label: 'Failed',   value: stats.failed,   suiteValue: s => s.failed,   color: 'text-red-600',    subColor: 'text-red-600' },
     ];
 
     return (
-      <div className="grid grid-cols-4 gap-2 text-center">
+      <div className="grid grid-cols-4 gap-2">
         {cols.map(col => (
           <div key={col.label}>
-            <div className={`text-lg font-bold ${col.color}`}>{col.value}</div>
-            <div className="text-xs text-gray-600">{col.label}</div>
+            <div className="flex justify-between items-baseline mb-1">
+              <span className="text-xs text-gray-600">{col.label}</span>
+              <span className={`text-lg font-bold ${col.color}`}>{col.value}</span>
+            </div>
             {hasSuites && (
-              <div className="mt-1 space-y-0.5">
+              <div className="space-y-0.5">
                 {suiteStats.map(s => (
-                  <div key={s.suite} className="text-xs">
-                    <span className="text-gray-400">{normalizeDisplayValue('suite', s.suite)}: </span>
+                  <div key={s.suite} className="flex justify-between text-xs">
+                    <span className="text-gray-400">{normalizeDisplayValue('suite', s.suite)}</span>
                     <span className={`font-medium ${col.subColor}`}>{col.suiteValue(s)}</span>
                   </div>
                 ))}
@@ -63,34 +67,49 @@ export default function RunStatsDisplay({ stats, suiteStats = [], variant = 'inl
     );
   }
 
-  // inline — run list pages (no suite data available from list API)
+  // inline variant — run list pages
   const passRate = stats.total > 0
     ? ((stats.passed / stats.total) * 100).toFixed(1)
     : '0.0';
 
   return (
-    <div className="flex items-center gap-4 text-sm flex-wrap">
-      <span className="text-gray-600">
-        <span className="font-semibold text-green-600">{stats.passed}</span> passed
-      </span>
-      <span className="text-gray-600">
-        <span className="font-semibold text-red-600">{stats.failed}</span> failed
-      </span>
-      <span className="text-gray-600">
-        <span className="font-semibold text-yellow-600">{stats.intended}</span> intended
-      </span>
-      <span className="text-gray-600">
-        <span className="font-semibold">{stats.total}</span> total
-      </span>
-      <span className={`font-semibold ${
-        parseFloat(passRate) >= 80
-          ? 'text-green-600'
-          : parseFloat(passRate) >= 50
-          ? 'text-yellow-600'
-          : 'text-red-600'
-      }`}>
-        {passRate}% pass rate
-      </span>
+    <div>
+      <div className="flex items-center gap-4 text-sm flex-wrap">
+        <span className="text-gray-600">
+          <span className="font-semibold text-green-600">{stats.passed}</span> passed
+        </span>
+        <span className="text-gray-600">
+          <span className="font-semibold text-red-600">{stats.failed}</span> failed
+        </span>
+        <span className="text-gray-600">
+          <span className="font-semibold text-yellow-600">{stats.intended}</span> intended
+        </span>
+        <span className="text-gray-600">
+          <span className="font-semibold">{stats.total}</span> total
+        </span>
+        <span className={`font-semibold ${
+          parseFloat(passRate) >= 80
+            ? 'text-green-600'
+            : parseFloat(passRate) >= 50
+            ? 'text-yellow-600'
+            : 'text-red-600'
+        }`}>
+          {passRate}% pass rate
+        </span>
+      </div>
+      {hasSuites && (
+        <div className="mt-1 space-y-0.5 pl-1">
+          {suiteStats.map(s => (
+            <div key={s.suite} className="flex items-center gap-3 text-xs text-gray-500">
+              <span className="font-medium text-gray-600 w-20 shrink-0">{normalizeDisplayValue('suite', s.suite)}</span>
+              <span><span className="font-semibold text-green-600">{s.passed}</span> passed</span>
+              <span><span className="font-semibold text-red-600">{s.failed}</span> failed</span>
+              <span><span className="font-semibold text-yellow-600">{s.intended}</span> intended</span>
+              <span><span className="font-semibold text-gray-700">{s.total}</span> total</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS test_suite_runs (
     intended INTEGER,
     skipped INTEGER,
     artifact_url TEXT,
+    suite_stats TEXT,  -- JSON array of { suite, total, passed, failed, intended } per test suite
     results_json BLOB, -- Compressed JSON stored as BLOB (gzip compressed)
     compression_type TEXT DEFAULT 'gzip', -- Compression format: 'gzip' or NULL for legacy uncompressed
     created_at TEXT DEFAULT (datetime('now'))

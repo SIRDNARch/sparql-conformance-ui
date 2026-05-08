@@ -11,7 +11,7 @@ import { join, dirname, basename, relative } from 'path';
 import { fileURLToPath } from 'url';
 import config from './config.js';
 import { isGitHubAppEnabled, processTestRun, verifyAuthentication } from './github.js';
-import { calculateTestStats } from './testStats.js';
+import { calculateTestStats, calculateSuiteStats } from './testStats.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -289,13 +289,14 @@ async function importLocalResultsDirectory(rootDir) {
 
       const compressedData = compressForStorage(jsonContent);
       const runTitle = getUniqueRunTitle(privateMetadata.runTitle, privateMetadata.repoFullName, privateMetadata.commitSha);
+      const suiteStats = calculateSuiteStats(resultsJson);
 
       const stmt = query(
         `INSERT INTO test_suite_runs (
           repo_full_name, run_title, commit_sha, engine_name, engine_version, pr_number, ref_name, head_ref, ref_kind,
           workflow_run_id, total, passed, failed, intended, skipped,
-          artifact_url, results_json, compression_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          suite_stats, artifact_url, results_json, compression_type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       );
 
       stmt.run(
@@ -314,6 +315,7 @@ async function importLocalResultsDirectory(rootDir) {
         stats.failed,
         stats.intended,
         stats.skipped,
+        JSON.stringify(suiteStats),
         privateMetadata.artifactUrl,
         compressedData,
         'gzip'
@@ -593,6 +595,7 @@ fastify.post('/api/upload', {
 
     // Calculate test statistics
     const stats = calculateTestStats(resultsJson);
+    const suiteStats = calculateSuiteStats(resultsJson);
     request.log.info(`Test statistics: ${stats.total} total, ${stats.passed} passed, ${stats.failed} failed`);
 
     // Compress JSON for efficient DB storage (gzip achieves ~95% compression)
@@ -609,8 +612,8 @@ fastify.post('/api/upload', {
       `INSERT INTO test_suite_runs (
         repo_full_name, run_title, commit_sha, engine_name, engine_version, pr_number, ref_name, head_ref, ref_kind,
         workflow_run_id, total, passed, failed, intended, skipped,
-        artifact_url, results_json, compression_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        suite_stats, artifact_url, results_json, compression_type
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
 
     const result = stmt.run(
@@ -629,6 +632,7 @@ fastify.post('/api/upload', {
       stats.failed,
       stats.intended,
       stats.skipped,
+      JSON.stringify(suiteStats),
       artifactUrl,
       compressedData,  // Store compressed data as BLOB
       'gzip'           // Track compression type for future flexibility
@@ -970,10 +974,10 @@ fastify.get('/api/runs', {
   }
 
   try {
-    let sql = `SELECT 
+    let sql = `SELECT
       id, repo_full_name, run_title, commit_sha, engine_name, engine_version, pr_number, ref_name, head_ref, ref_kind,
       workflow_run_id, total, passed, failed, intended, skipped,
-      artifact_url, created_at
+      suite_stats, artifact_url, created_at
      FROM test_suite_runs`;
 
     const params = [];
@@ -1011,6 +1015,10 @@ fastify.get('/api/runs', {
 
     const stmt = query(sql);
     const results = stmt.all(...params);
+
+    for (const row of results) {
+      row.suite_stats = row.suite_stats ? JSON.parse(row.suite_stats) : [];
+    }
 
     return {
       count: results.length,

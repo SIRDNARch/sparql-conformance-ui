@@ -362,6 +362,17 @@ export default function CompareView() {
     unchanged: comparisonData.filter(r => r.changeType === 'unchanged').length,
   };
 
+  // Per-suite breakdown of comparison stats
+  const comparisonSuiteStats = [...distinctSuites].sort().map(suite => ({
+    suite,
+    total:     comparisonData.filter(r => r.suite === suite).length,
+    regression:comparisonData.filter(r => r.suite === suite && r.changeType === 'regression').length,
+    fixed:     comparisonData.filter(r => r.suite === suite && r.changeType === 'fixed').length,
+    new:       comparisonData.filter(r => r.suite === suite && r.changeType === 'new').length,
+    removed:   comparisonData.filter(r => r.suite === suite && r.changeType === 'removed').length,
+    unchanged: comparisonData.filter(r => r.suite === suite && r.changeType === 'unchanged').length,
+  }));
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -426,12 +437,12 @@ export default function CompareView() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          <StatCard label="Total Tests" value={stats.total} color="gray" />
-          <StatCard label="Regressions" value={stats.regression} color="red" description="Passed/Intended → Failed" />
-          <StatCard label="Fixed" value={stats.fixed} color="green" description="Failed → Passed/Intended" />
-          <StatCard label="New Tests" value={stats.new} color="purple" description="Not Tested → Any" />
-          <StatCard label="Removed" value={stats.removed} color="gray" description="Any → Not Tested" />
-          <StatCard label="Unchanged" value={stats.unchanged} color="gray" />
+          <StatCard label="Total Tests" value={stats.total} color="gray" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.total} />
+          <StatCard label="Regressions" value={stats.regression} color="red" description="Passed/Intended → Failed" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.regression} />
+          <StatCard label="Fixed" value={stats.fixed} color="green" description="Failed → Passed/Intended" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.fixed} />
+          <StatCard label="New Tests" value={stats.new} color="purple" description="Not Tested → Any" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.new} />
+          <StatCard label="Removed" value={stats.removed} color="gray" description="Any → Not Tested" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.removed} />
+          <StatCard label="Unchanged" value={stats.unchanged} color="gray" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.unchanged} />
         </div>
 
         {/* Filters */}
@@ -707,22 +718,42 @@ function RunInfoCard({ run, computedStats = null, onClick, isLatest }) {
   );
 }
 
-function StatCard({ label, value, color, description }) {
+function StatCard({ label, value, color, description, suiteStats = [], suiteValueFn }) {
   const colorClasses = {
-    gray: 'bg-gray-100 text-gray-800',
-    green: 'bg-green-100 text-green-800',
-    red: 'bg-red-100 text-red-800',
+    gray:   'bg-gray-100 text-gray-800',
+    green:  'bg-green-100 text-green-800',
+    red:    'bg-red-100 text-red-800',
     orange: 'bg-orange-100 text-orange-800',
     purple: 'bg-purple-100 text-purple-800',
     yellow: 'bg-yellow-100 text-yellow-800',
   };
+  const dividerClasses = {
+    gray:   'border-gray-300',
+    green:  'border-green-300',
+    red:    'border-red-300',
+    orange: 'border-orange-300',
+    purple: 'border-purple-300',
+    yellow: 'border-yellow-300',
+  };
 
   return (
     <div className={`rounded-xl p-4 ${colorClasses[color]}`}>
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-sm font-medium">{label}</div>
+      <div className="flex justify-between items-baseline">
+        <span className="text-sm font-medium">{label}</span>
+        <span className="text-2xl font-bold">{value}</span>
+      </div>
       {description && (
-        <div className="text-xs opacity-75 mt-1">{description}</div>
+        <div className="text-xs opacity-75 mt-0.5">{description}</div>
+      )}
+      {suiteStats.length > 0 && suiteValueFn && (
+        <div className={`border-t ${dividerClasses[color]} mt-2 pt-2 space-y-1`}>
+          {suiteStats.map(s => (
+            <div key={s.suite} className="flex justify-between text-xs">
+              <span className="opacity-70">{normalizeDisplayValue('suite', s.suite)}</span>
+              <span className="font-semibold">{suiteValueFn(s)}</span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

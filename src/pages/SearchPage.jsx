@@ -364,6 +364,7 @@ export default function SearchPage() {
                         <RunStatsDisplay
                           variant="inline"
                           stats={{ total: run.total, passed: run.passed, failed: run.failed, intended: run.intended || 0 }}
+                          suiteStats={run.suite_stats ?? []}
                         />
                       </div>
 
