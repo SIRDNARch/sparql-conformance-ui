@@ -11,6 +11,13 @@ export default function CompareTestDetails({ test1, test2, onClose, run1Label = 
   const [activeTab, setActiveTab] = useState('overview');
   const [toggleMatching, setToggleMatching] = useState(false);
   const [toggleIntended, setToggleIntended] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // Reset tab when test changes
   useEffect(() => {
@@ -55,7 +62,15 @@ export default function CompareTestDetails({ test1, test2, onClose, run1Label = 
             )}
           </div>
         </div>
-        <CloseButton onClick={onClose} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCopyLink}
+            className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-600 transition-colors"
+          >
+            {copied ? 'Copied!' : 'Copy Link'}
+          </button>
+          <CloseButton onClick={onClose} />
+        </div>
       </div>
 
       {/* Tabs and Toggles */}

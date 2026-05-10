@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
 import { extractTestRows, getFullTestData } from '../utils/extractRows';
 import { normalizeDisplayValue } from '../utils/displayMappings';
@@ -11,6 +11,7 @@ export default function SingleRunView() {
   const { id } = useParams();
   const location = useLocation();
   const backPath = location.state?.from || '/';
+  const [searchParams, setSearchParams] = useSearchParams();
   const [run, setRun] = useState(null);
   const [testData, setTestData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -122,6 +123,18 @@ export default function SingleRunView() {
     };
   }, [run]);
 
+  // Auto-open test detail panel when URL contains ?test= params (e.g. from a shared link)
+  useEffect(() => {
+    if (!run?.results_json || selectedTest) return;
+    const testName = searchParams.get('test');
+    const suite = searchParams.get('suite');
+    if (!testName) return;
+    const fullTestData = getFullTestData(run.results_json, suite, testName);
+    if (fullTestData) {
+      setSelectedTest({ ...fullTestData, testName });
+    }
+  }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Dynamic filtering: compute available options for each filter based on OTHER active filters
   const getAvailableOptions = (filterKey) => {
     // Get data filtered by all filters EXCEPT the current one
@@ -214,6 +227,7 @@ export default function SingleRunView() {
       : null;
     if (fullTestData) {
       setSelectedTest({ ...fullTestData, testName: row.testName });
+      setSearchParams({ test: row.testName, suite: row.suite ?? '' }, { replace: true });
     }
   };
 
@@ -443,9 +457,12 @@ export default function SingleRunView() {
 
         {/* Selected Test Details */}
         {selectedTest && (
-          <TestDetails 
-            test={selectedTest} 
-            onClose={() => setSelectedTest(null)} 
+          <TestDetails
+            test={selectedTest}
+            onClose={() => {
+              setSelectedTest(null);
+              setSearchParams({}, { replace: true });
+            }}
           />
         )}
       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
 import { extractTestRows, getFullTestData } from '../utils/extractRows';
 import { normalizeDisplayValue } from '../utils/displayMappings';
@@ -12,6 +12,7 @@ export default function CompareView() {
   const navigate = useNavigate();
   const location = useLocation();
   const backPath = location.state?.from || '/';
+  const [searchParams, setSearchParams] = useSearchParams();
   const [run1, setRun1] = useState(null);
   const [run2, setRun2] = useState(null);
   const [run1IsLatest, setRun1IsLatest] = useState(false);
@@ -322,6 +323,23 @@ export default function CompareView() {
     }));
   };
 
+  // Auto-open test detail panel when URL contains ?test= params (e.g. from a shared link)
+  useEffect(() => {
+    if (!run1?.results_json || !run2?.results_json || selectedTest) return;
+    const testName = searchParams.get('test');
+    const suite = searchParams.get('suite');
+    if (!testName) return;
+    const test1Raw = getFullTestData(run1.results_json, suite, testName);
+    const test2Raw = getFullTestData(run2.results_json, suite, testName);
+    if (test1Raw || test2Raw) {
+      setSelectedTest({
+        test1: test1Raw ? { ...test1Raw, testName } : null,
+        test2: test2Raw ? { ...test2Raw, testName } : null,
+        testName
+      });
+    }
+  }, [run1, run2]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleFilterToggle = (filterKey, value) => {
     setFilters(prev => {
       const newSet = new Set(prev[filterKey]);
@@ -346,6 +364,7 @@ export default function CompareView() {
       test2: test2Raw ? { ...test2Raw, testName: row.testName } : null,
       testName: row.testName
     });
+    setSearchParams({ test: row.testName, suite: row.suite ?? '' }, { replace: true });
   };
 
   const distinctSuites = new Set(comparisonData.map(r => r.suite));
@@ -615,7 +634,10 @@ export default function CompareView() {
             test2={selectedTest.test2}
             run1Label={run1?.run_title || `Run ${id1.substring(0, 8)}`}
             run2Label={run2?.run_title || `Run ${id2.substring(0, 8)}`}
-            onClose={() => setSelectedTest(null)} 
+            onClose={() => {
+              setSelectedTest(null);
+              setSearchParams({}, { replace: true });
+            }}
           />
         )}
       </div>
