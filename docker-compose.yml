@@ -1,0 +1,104 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    ports:
+      - "${PUBLIC_WEB_PORT:-8080}:80"
+    depends_on:
+      - api-public
+    profiles: ["public"]
+
+  api-public:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      APP_MODE: public
+      API_SURFACE: read
+      PORT: 3000
+      HOST: 0.0.0.0
+      CORS_ORIGIN: ${PUBLIC_CORS_ORIGIN:-}
+      WEBSITE_ORIGIN: ${PUBLIC_WEBSITE_ORIGIN:-http://localhost:8080}
+      WEBSITE_BASE_PATH: ${VITE_BASE_PATH:-/}
+      DB_PATH: /data/conformance.db
+      API_KEY: ${API_KEY:-}
+      GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY:-}
+      GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-}
+      WEBSITE_URL: ${WEBSITE_URL:-}
+    volumes:
+      - db_data:/data
+    networks:
+      default:
+        aliases:
+          - api
+    profiles: ["public"]
+
+  uploader:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "${PUBLIC_UPLOAD_PORT:-3001}:3000"
+    environment:
+      APP_MODE: public
+      API_SURFACE: upload
+      PORT: 3000
+      HOST: 0.0.0.0
+      CORS_ORIGIN: ${PUBLIC_CORS_ORIGIN:-}
+      WEBSITE_ORIGIN: ${PUBLIC_WEBSITE_ORIGIN:-http://localhost:8080}
+      WEBSITE_BASE_PATH: ${VITE_BASE_PATH:-/}
+      DB_PATH: /data/conformance.db
+      API_KEY: ${API_KEY:-change-me}
+      GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY:-}
+      GITHUB_INSTALLATION_ID: ${GITHUB_INSTALLATION_ID:-}
+      WEBSITE_URL: ${WEBSITE_URL:-}
+    volumes:
+      - db_data:/data
+    profiles: ["public"]
+
+  web-private:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    ports:
+      - "${PRIVATE_WEB_PORT:-8081}:80"
+    depends_on:
+      - api-private
+    profiles: ["private"]
+
+  api-private:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      APP_MODE: private
+      API_SURFACE: all
+      PORT: 3000
+      HOST: 0.0.0.0
+      CORS_ORIGIN: ${PRIVATE_CORS_ORIGIN:-}
+      WEBSITE_ORIGIN: ${PRIVATE_WEBSITE_ORIGIN:-http://localhost:8081}
+      WEBSITE_BASE_PATH: ${VITE_BASE_PATH:-/}
+      DB_PATH: /data/conformance.db
+      LOCAL_RESULTS_DIR: /results
+      PRIVATE_AUTO_IMPORT: "true"
+    volumes:
+      - db_data_private:/data
+      - ${LOCAL_RESULTS_DIR:-./public/results}:/results:ro
+    networks:
+      default:
+        aliases:
+          - api
+    profiles: ["private"]
+
+volumes:
+  db_data:
+  db_data_private:
