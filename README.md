@@ -29,8 +29,6 @@ Upload endpoint:
 
 - `POST /api/upload` (available on upload surface or private mode)
 
-Full API details: [API.md](./API.md)
-
 ## Upload examples
 
 ### Public uploader (API key required)

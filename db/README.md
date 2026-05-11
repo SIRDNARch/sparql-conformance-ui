@@ -48,7 +48,7 @@ npm run server:dev
 npm run server
 ```
 
-API endpoints will be available at `http://localhost:3000`. See [../API.md](../API.md) for complete documentation.
+API endpoints will be available at `http://localhost:3000`.
 
 **Import Options:**
 - `--repo <owner/repo>` - Repository name (default: example/test-repo)
@@ -71,7 +71,6 @@ The import command will:
 - **`schema.sql`** - Database schema with table, indexes, FTS5 table, and triggers
 - **`connection.js`** - SQLite connection and query utilities
 - **`setup.js`** - Setup script to create tables and indexes
-- **`example.js`** - Comprehensive examples including compressed JSON handling and FTS5 usage
 - **`import.js`** - Import test result JSON files into the database
 
 ## Table Schema
@@ -99,6 +98,7 @@ Stores SPARQL test suite run results from CI uploads, manual uploads, and privat
 | `intended` | INTEGER | Tests failed as intended |
 | `skipped` | INTEGER | Tests skipped |
 | `artifact_url` | TEXT | URL to GitHub artifact |
+| `suite_stats` | TEXT | JSON array of per-suite stats `{ suite, total, passed, failed, intended }` |
 | `results_json` | BLOB | Full test results, stored gzip-compressed |
 | `compression_type` | TEXT | Compression format (`gzip`) |
 | `created_at` | TEXT | Creation timestamp (ISO8601) |
