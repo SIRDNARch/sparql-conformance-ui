@@ -760,7 +760,7 @@ function StatCard({ label, value, color, description, suiteStats = [], suiteValu
 
   return (
     <div className={`rounded-xl p-4 min-w-[9rem] ${colorClasses[color]}`}>
-      <div className="flex justify-between items-baseline">
+      <div className="flex justify-between items-baseline gap-4">
         <span className="text-sm font-medium whitespace-nowrap">{label}</span>
         <span className="text-2xl font-bold">{value}</span>
       </div>
@@ -851,7 +851,7 @@ function FilterRow({ label, filterKey, selectedValues, allOptions, availableOpti
   const availableCount = availableOptions.size;
   
   return (
-    <div className="flex items-start gap-4 py-3 border-b border-gray-100 last:border-b-0">
+    <div className="flex items-start gap-4 py-2 border-b border-gray-100 last:border-b-0">
       {/* Column name on the left */}
       <div className="w-48 flex-shrink-0">
         <div className="flex items-baseline gap-2">
@@ -895,7 +895,7 @@ function FilterRow({ label, filterKey, selectedValues, allOptions, availableOpti
       {/* Checkboxes on the right */}
       <div className="flex-1">
         {hasOptions ? (
-          <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
             {/* Checkbox list - show all options, disable unavailable ones */}
             {allOptions.map(option => {
               const isAvailable = availableOptions.has(option);
