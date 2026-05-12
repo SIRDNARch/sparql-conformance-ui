@@ -455,12 +455,11 @@ export default function CompareView() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          <StatCard label="Total Tests" value={stats.total} color="gray" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.total} />
-          <StatCard label="Regressions" value={stats.regression} color="red" description="Passed/Intended → Failed" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.regression} />
-          <StatCard label="Fixed" value={stats.fixed} color="green" description="Failed → Passed/Intended" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.fixed} />
-          <StatCard label="New Tests" value={stats.new} color="purple" description="Not Tested → Any" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.new} />
-          <StatCard label="Removed" value={stats.removed} color="gray" description="Any → Not Tested" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.removed} />
-          <StatCard label="Unchanged" value={stats.unchanged} color="gray" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.unchanged} />
+          {stats.regression > 0 && <StatCard label="Regressions" value={stats.regression} color="red" description="Passed/Intended → Failed" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.regression} />}
+          {stats.fixed > 0 && <StatCard label="Fixed" value={stats.fixed} color="green" description="Failed → Passed/Intended" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.fixed} />}
+          {stats.new > 0 && <StatCard label="New Tests" value={stats.new} color="purple" description="Not Tested → Any" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.new} />}
+          {stats.removed > 0 && <StatCard label="Removed" value={stats.removed} color="gray" description="Any → Not Tested" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.removed} />}
+          {stats.unchanged > 0 && <StatCard label="Unchanged" value={stats.unchanged} color="gray" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.unchanged} />}
         </div>
 
         {/* Filters */}
