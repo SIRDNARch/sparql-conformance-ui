@@ -464,7 +464,7 @@ export default function CompareView() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm mb-6">
+        <div className="bg-white rounded-xl shadow-sm mb-6 max-w-[600px]">
           {/* Filter Header - Collapsible */}
           <div 
             className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
@@ -603,20 +603,20 @@ export default function CompareView() {
                       selectedTest?.testName === row.testName ? 'bg-blue-50' : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}
                   >
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{row.testName}</td>
+                    <td className="px-2 py-2 text-sm font-medium text-gray-900">{row.testName}</td>
                     {showSuiteFilter && (
-                      <td className="px-4 py-3 text-sm text-gray-600">{normalizeDisplayValue('suite', row.suite)}</td>
+                      <td className="px-2 py-2 text-sm text-gray-600">{normalizeDisplayValue('suite', row.suite)}</td>
                     )}
-                    <td className="px-4 py-3 text-sm text-gray-600">{row.group}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{row.type}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2 text-sm text-gray-600">{row.group}</td>
+                    <td className="px-2 py-2 text-sm text-gray-600">{row.type}</td>
+                    <td className="px-2 py-2">
                       <StatusBadge status={row.status1} />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2">
                       <StatusBadge status={row.status2} />
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{row.errorType1 || '-'}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2 text-sm text-gray-600">{row.errorType1 || '-'}</td>
+                    <td className="px-2 py-2">
                       <ChangeBadge changeType={row.changeType} />
                     </td>
                   </tr>
@@ -788,7 +788,7 @@ function TableHeader({ label, sortKey, sortConfig, onSort }) {
   return (
     <th
       onClick={() => onSort(sortKey)}
-      className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+      className="px-2 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
     >
       <div className="flex items-center gap-2">
         {label}
