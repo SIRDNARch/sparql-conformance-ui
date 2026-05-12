@@ -183,8 +183,7 @@ export default function SearchPage() {
   }, [appMode, latestMainlineRun, displayResults]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 pb-20">
-      <div className="max-w-6xl mx-auto">
+    <div className="py-8 px-4 pb-20">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -358,11 +357,10 @@ export default function SearchPage() {
             </div>
           )}
         </div>
-      </div>
 
       {selectedRuns.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-blue-600 text-white shadow-lg">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
               <span className="font-medium shrink-0">
                 {selectedRuns.length} run{selectedRuns.length !== 1 ? 's' : ''} selected

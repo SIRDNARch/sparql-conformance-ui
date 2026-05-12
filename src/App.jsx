@@ -6,11 +6,15 @@ import ManualEngineRunsPage from './pages/ManualEngineRunsPage';
 
 export default function App() {
     return (
-        <Routes>
-            <Route path="/" element={<SearchPage />} />
-            <Route path="/manual-engines" element={<ManualEngineRunsPage />} />
-            <Route path="/run/:id" element={<SingleRunView />} />
-            <Route path="/compare/:id1/:id2" element={<CompareView />} />
-        </Routes>
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-[1400px] mx-auto">
+                <Routes>
+                    <Route path="/" element={<SearchPage />} />
+                    <Route path="/manual-engines" element={<ManualEngineRunsPage />} />
+                    <Route path="/run/:id" element={<SingleRunView />} />
+                    <Route path="/compare/:id1/:id2" element={<CompareView />} />
+                </Routes>
+            </div>
+        </div>
     );
 }

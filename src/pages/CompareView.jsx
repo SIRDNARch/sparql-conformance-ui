@@ -394,7 +394,7 @@ export default function CompareView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <div className="text-xl text-gray-600">Loading comparison...</div>
         </div>
@@ -404,7 +404,7 @@ export default function CompareView() {
 
   if (processing) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <div className="text-xl text-gray-600">Processing comparison data...</div>
           <div className="text-sm text-gray-500 mt-2">This may take a few seconds</div>
@@ -415,7 +415,7 @@ export default function CompareView() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
           <div className="text-xl text-red-600 mb-4">Error: {error}</div>
           <Link to={backPath} className="text-blue-600 hover:underline">
@@ -427,8 +427,7 @@ export default function CompareView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-[1800px] mx-auto">
+    <div className="p-6">
         {/* Back Link */}
         <div className="mb-6">
           <Link to={backPath} className="text-blue-600 hover:underline inline-block">
@@ -640,7 +639,6 @@ export default function CompareView() {
             }}
           />
         )}
-      </div>
     </div>
   );
 }
