@@ -56,7 +56,7 @@ export default function ManualEngineRunsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 pb-20">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
@@ -75,34 +75,6 @@ export default function ManualEngineRunsPage() {
           </Link>
         </div>
 
-        {selectedRuns.length > 0 && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="font-medium text-blue-900">
-                  {selectedRuns.length} run{selectedRuns.length !== 1 ? 's' : ''} selected
-                </span>
-                <span className="text-blue-700 ml-2 text-sm">
-                  {selectedRuns.length === 1 ? '(Open run)' : '(Compare selected runs)'}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSelectedRuns([])}
-                  className="px-4 py-2 text-blue-700 hover:bg-blue-100 rounded-lg font-medium"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={handleOpen}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                >
-                  {selectedRuns.length === 1 ? 'View Run' : 'Compare Runs'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
@@ -186,6 +158,50 @@ export default function ManualEngineRunsPage() {
           )}
         </div>
       </div>
+
+      {selectedRuns.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-blue-600 text-white shadow-lg">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <span className="font-medium shrink-0">
+                {selectedRuns.length} run{selectedRuns.length !== 1 ? 's' : ''} selected
+              </span>
+              <span className="text-blue-200 text-sm truncate">
+                {selectedRuns[0] && (
+                  <>
+                    <span className="font-semibold text-white">newer:</span>{' '}
+                    {selectedRuns[0].run_title || `Run #${selectedRuns[0].id}`}
+                  </>
+                )}
+                {selectedRuns[1] && (
+                  <>
+                    {' '}<span className="opacity-60">vs</span>{' '}
+                    <span className="font-semibold text-white">baseline:</span>{' '}
+                    {selectedRuns[1].run_title || `Run #${selectedRuns[1].id}`}
+                  </>
+                )}
+                {selectedRuns.length === 1 && (
+                  <span className="opacity-60 ml-2">— select another to compare</span>
+                )}
+              </span>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => setSelectedRuns([])}
+                className="px-4 py-2 text-blue-100 hover:bg-blue-500 rounded-lg font-medium"
+              >
+                Clear
+              </button>
+              <button
+                onClick={handleOpen}
+                className="px-4 py-2 bg-white text-blue-700 rounded-lg hover:bg-blue-50 font-medium"
+              >
+                {selectedRuns.length === 1 ? 'View Run' : 'Compare Runs →'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

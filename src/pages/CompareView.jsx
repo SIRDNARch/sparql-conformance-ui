@@ -538,7 +538,7 @@ export default function CompareView() {
                 />
 
                 <FilterRow
-                  label="Status (Run 1)"
+                  label="Status (Newer)"
                   filterKey="status1"
                   selectedValues={filters.status1}
                   allOptions={getAllOptions('status1')}
@@ -547,7 +547,7 @@ export default function CompareView() {
                 />
 
                 <FilterRow
-                  label="Status (Run 2)"
+                  label="Status (Baseline)"
                   filterKey="status2"
                   selectedValues={filters.status2}
                   allOptions={getAllOptions('status2')}
@@ -565,7 +565,7 @@ export default function CompareView() {
                 />
 
                 <FilterRow
-                  label="Error Type (Run 1)"
+                  label="Error Type (Newer)"
                   filterKey="errorType1"
                   selectedValues={filters.errorType1}
                   allOptions={getAllOptions('errorType1')}
@@ -589,9 +589,9 @@ export default function CompareView() {
                   )}
                   <TableHeader label="Group" sortKey="group" sortConfig={sortConfig} onSort={handleSort} />
                   <TableHeader label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} />
-                  <TableHeader label="Status (Run 1)" sortKey="status1" sortConfig={sortConfig} onSort={handleSort} />
-                  <TableHeader label="Status (Run 2)" sortKey="status2" sortConfig={sortConfig} onSort={handleSort} />
-                  <TableHeader label="Error Type (Run 1)" sortKey="errorType1" sortConfig={sortConfig} onSort={handleSort} />
+                  <TableHeader label="Status (Newer)" sortKey="status1" sortConfig={sortConfig} onSort={handleSort} />
+                  <TableHeader label="Status (Baseline)" sortKey="status2" sortConfig={sortConfig} onSort={handleSort} />
+                  <TableHeader label="Error Type (Newer)" sortKey="errorType1" sortConfig={sortConfig} onSort={handleSort} />
                   <TableHeader label="Change" sortKey="changeType" sortConfig={sortConfig} onSort={handleSort} />
                 </tr>
               </thead>
@@ -646,7 +646,7 @@ export default function CompareView() {
 }
 
 // Helper Components
-function RunInfoCard({ run, computedStats = null, onClick, isLatest }) {
+function RunInfoCard({ run, computedStats = null, onClick, isLatest, runNumber }) {
   if (!run) {
     return (
       <div className="bg-white rounded-xl shadow-sm p-5 border-2 border-gray-200">
@@ -671,6 +671,9 @@ function RunInfoCard({ run, computedStats = null, onClick, isLatest }) {
       {/* Header with Title, Commit SHA, PR Badge, Branch, Date, Pass Rate and Click Indicator */}
       <div className="flex items-center justify-between mb-3 gap-2">
         <div className="flex items-center gap-2 flex-wrap flex-1">
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded ${runNumber === 1 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+            {runNumber === 1 ? 'Newer' : 'Baseline'}
+          </span>
           <h3 className="text-base font-semibold text-gray-900">
             {run.run_title || `Run #${run.id}`}
           </h3>
