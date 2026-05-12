@@ -454,7 +454,7 @@ export default function CompareView() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div className="flex flex-wrap justify-center gap-4 mb-6">
           {stats.regression > 0 && <StatCard label="Regressions" value={stats.regression} color="red" description="Passed/Intended → Failed" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.regression} />}
           {stats.fixed > 0 && <StatCard label="Fixed" value={stats.fixed} color="green" description="Failed → Passed/Intended" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.fixed} />}
           {stats.new > 0 && <StatCard label="New Tests" value={stats.new} color="purple" description="Not Tested → Any" suiteStats={comparisonSuiteStats} suiteValueFn={s => s.new} />}
@@ -759,9 +759,9 @@ function StatCard({ label, value, color, description, suiteStats = [], suiteValu
   };
 
   return (
-    <div className={`rounded-xl p-4 ${colorClasses[color]}`}>
+    <div className={`rounded-xl p-4 min-w-[9rem] ${colorClasses[color]}`}>
       <div className="flex justify-between items-baseline">
-        <span className="text-sm font-medium">{label}</span>
+        <span className="text-sm font-medium whitespace-nowrap">{label}</span>
         <span className="text-2xl font-bold">{value}</span>
       </div>
       {description && (
