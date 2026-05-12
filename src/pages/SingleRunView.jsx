@@ -318,7 +318,7 @@ export default function SingleRunView() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm mb-6 max-w-[600px]">
+        <div className="bg-white rounded-xl shadow-sm mb-6 max-w-[700px] mx-auto">
           {/* Filter Header - Always Visible */}
           <div 
             className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
