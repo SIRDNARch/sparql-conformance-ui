@@ -230,6 +230,22 @@ function parseRepoFullName(repoFullName) {
 }
 
 /**
+ * Extract tests for a specific suite as a flat { testName: testObj } map.
+ * Handles both v1 (flat sparql11 format) and v2 (multi-suite format).
+ */
+function extractSuiteTests(resultsJson, suite) {
+  if (!resultsJson) return {};
+  if ('version' in resultsJson) {
+    return resultsJson.suites?.[suite]?.tests ?? {};
+  }
+  const tests = {};
+  for (const [k, v] of Object.entries(resultsJson)) {
+    if (k !== 'info') tests[k] = v;
+  }
+  return tests;
+}
+
+/**
  * Process a test run and trigger GitHub integrations
  * This is the main entry point after an upload
  * 
@@ -256,16 +272,22 @@ export async function processTestRun({
 }) {
   const { compareTestRuns } = await import('./compare.js');
   const { buildCommentBody } = await import('./commentBuilder.js');
+  const { calculateSuiteStats } = await import('./testStats.js');
 
   const { owner, repo } = parseRepoFullName(repoFullName);
-  
-  const comparison = compareTestRuns(currentResults, previousResults || {});
-  
+
+  const currentSparql11 = extractSuiteTests(currentResults, 'sparql11');
+  const previousSparql11 = extractSuiteTests(previousResults || {}, 'sparql11');
+  const comparison = compareTestRuns(currentSparql11, previousSparql11);
+
+  const suiteStats = calculateSuiteStats(currentResults);
+
   const { body: commentBody, summary } = buildCommentBody(
     comparison,
     config.websiteUrl,
     currentRunId,
-    previousRunId
+    previousRunId,
+    suiteStats
   );
 
   const conclusion = comparison.isMergeable ? 'success' : 'failure';

@@ -32,7 +32,7 @@ const STATUS_TRANSITIONS = {
  */
 function generateChangesTable(comparison) {
   let table = `
-#### Test Status Changes 📊
+#### SPARQL 1.1 Test Status Changes 📊
 
 | Number of Tests | Previous Status | Current Status |
 | --------------- | --------------- | -------------- |
@@ -50,18 +50,45 @@ function generateChangesTable(comparison) {
 
 /**
  * Generate the overview statistics table
- * 
- * @param {Object} comparison - Result from compareTestRuns()
+ *
+ * @param {Object} comparison - Result from compareTestRuns() for sparql11
+ * @param {Array} suiteStats - Per-suite stats from calculateSuiteStats()
  * @returns {string} Markdown table
  */
-function generateOverviewTable(comparison) {
-  return `
-### Overview  
-| Number of Tests | Passed ✅ | Intended ✅ | Failed ❌| Not Tested |
-| --------------- | --------- | ---------- | -------- | ---------- |
-| ${comparison.total} | ${comparison.p} | ${comparison.i} | ${comparison.f} | ${comparison.n} |
+function generateOverviewTable(comparison, suiteStats) {
+  if (!suiteStats || suiteStats.length === 0) {
+    return `
+### Overview
+| Suite | Total | Passed ✅ | Intended ✅ | Failed ❌ | Not Tested |
+| ----- | ----- | --------- | ---------- | -------- | ---------- |
+| sparql11 | ${comparison.total} | ${comparison.p} | ${comparison.i} | ${comparison.f} | ${comparison.n} |
 
 `;
+  }
+
+  let table = `
+### Overview
+| Suite | Total | Passed ✅ | Intended ✅ | Failed ❌ | Not Tested |
+| ----- | ----- | --------- | ---------- | -------- | ---------- |
+`;
+
+  let grandTotal = 0, grandPassed = 0, grandIntended = 0, grandFailed = 0;
+
+  for (const s of suiteStats) {
+    const notTested = s.total - s.passed - s.intended - s.failed;
+    table += `| ${s.suite} | ${s.total} | ${s.passed} | ${s.intended} | ${s.failed} | ${notTested} |\n`;
+    grandTotal += s.total;
+    grandPassed += s.passed;
+    grandIntended += s.intended;
+    grandFailed += s.failed;
+  }
+
+  if (suiteStats.length > 1) {
+    const grandNotTested = grandTotal - grandPassed - grandIntended - grandFailed;
+    table += `| **Total** | **${grandTotal}** | **${grandPassed}** | **${grandIntended}** | **${grandFailed}** | **${grandNotTested}** |\n`;
+  }
+
+  return table + '\n';
 }
 
 /**
@@ -117,10 +144,10 @@ function generateDetailsLink(websiteUrl, currentRunId, previousRunId) {
  * @param {number|string|null} previousRunId - Previous/master run ID
  * @returns {{ body: string, summary: string }}
  */
-export function buildCommentBody(comparison, websiteUrl, currentRunId, previousRunId) {
+export function buildCommentBody(comparison, websiteUrl, currentRunId, previousRunId, suiteStats = []) {
   let body = '';
 
-  body += generateOverviewTable(comparison);
+  body += generateOverviewTable(comparison, suiteStats);
 
   const verdict = generateVerdict(comparison);
   body += verdict.markdown;
