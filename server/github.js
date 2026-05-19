@@ -246,6 +246,16 @@ function extractSuiteTests(resultsJson, suite) {
 }
 
 /**
+ * Return the suite keys present in a result file.
+ * v2: keys of suites object. v1 legacy: ['sparql11'].
+ */
+function getSuiteKeys(resultsJson) {
+  if (!resultsJson) return [];
+  if ('version' in resultsJson) return Object.keys(resultsJson.suites ?? {});
+  return ['sparql11'];
+}
+
+/**
  * Process a test run and trigger GitHub integrations
  * This is the main entry point after an upload
  * 
@@ -276,9 +286,15 @@ export async function processTestRun({
 
   const { owner, repo } = parseRepoFullName(repoFullName);
 
-  const currentSparql11 = extractSuiteTests(currentResults, 'sparql11');
-  const previousSparql11 = extractSuiteTests(previousResults || {}, 'sparql11');
-  const comparison = compareTestRuns(currentSparql11, previousSparql11);
+  const suiteKeys = getSuiteKeys(currentResults);
+  const suiteComparisons = {};
+  for (const suiteKey of suiteKeys) {
+    const cur = extractSuiteTests(currentResults, suiteKey);
+    const prev = extractSuiteTests(previousResults || {}, suiteKey);
+    suiteComparisons[suiteKey] = compareTestRuns(cur, prev);
+  }
+  // Verdict is sparql11-only (intentional — regression check is SPARQL 1.1 conformance)
+  const comparison = suiteComparisons['sparql11'] ?? compareTestRuns({}, {});
 
   const suiteStats = calculateSuiteStats(currentResults);
 
@@ -287,7 +303,8 @@ export async function processTestRun({
     config.websiteUrl,
     currentRunId,
     previousRunId,
-    suiteStats
+    suiteStats,
+    suiteComparisons
   );
 
   const conclusion = comparison.isMergeable ? 'success' : 'failure';

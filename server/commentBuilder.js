@@ -1,8 +1,15 @@
 /**
  * GitHub Comment Builder
- * 
+ *
  * Generates markdown content for GitHub PR comments and check run summaries.
  */
+
+const COMMENT_CHAR_LIMIT = 60_000;
+
+function displaySuiteName(key) {
+  const names = { sparql11: 'SPARQL 1.1', sparql10: 'SPARQL 1.0' };
+  return names[key] ?? key.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
 
 const STATUS_TRANSITIONS = {
   pToF: ['Passed', 'Failed'],
@@ -25,14 +32,16 @@ const STATUS_TRANSITIONS = {
 };
 
 /**
- * Generate a markdown table summarizing test status changes
- * 
+ * Generate a markdown table summarizing test status changes for one suite
+ *
  * @param {Object} comparison - Result from compareTestRuns()
+ * @param {string} suiteKey - Raw suite key (e.g. 'sparql11', 'my-custom')
  * @returns {string} Markdown table
  */
-function generateChangesTable(comparison) {
+function generateChangesTable(comparison, suiteKey) {
+  const label = displaySuiteName(suiteKey);
   let table = `
-#### SPARQL 1.1 Test Status Changes 📊
+#### Test Status Changes (${label}) 📊
 
 | Number of Tests | Previous Status | Current Status |
 | --------------- | --------------- | -------------- |
@@ -76,7 +85,7 @@ function generateOverviewTable(comparison, suiteStats) {
 
   for (const s of suiteStats) {
     const notTested = s.total - s.passed - s.intended - s.failed;
-    table += `| ${s.suite} | ${s.total} | ${s.passed} | ${s.intended} | ${s.failed} | ${notTested} |\n`;
+    table += `| ${displaySuiteName(s.suite)} | ${s.total} | ${s.passed} | ${s.intended} | ${s.failed} | ${notTested} |\n`;
     grandTotal += s.total;
     grandPassed += s.passed;
     grandIntended += s.intended;
@@ -116,11 +125,11 @@ function generateVerdict(comparison) {
 
 /**
  * Generate a link to the details website
- * 
+ *
  * @param {string} websiteUrl - Base URL to the conformance website
  * @param {number|string|null} currentRunId - Current run ID
  * @param {number|string|null} previousRunId - Previous/baseline run ID
- * @returns {string} Markdown link
+ * @returns {{ url: string, markdown: string }}
  */
 function generateDetailsLink(websiteUrl, currentRunId, previousRunId) {
   const base = websiteUrl.replace(/\/$/, '');
@@ -132,19 +141,21 @@ function generateDetailsLink(websiteUrl, currentRunId, previousRunId) {
     url = `${base}/run/${encodeURIComponent(String(currentRunId))}`;
   }
 
-  return `\n📋 **Details:** [View full comparison](${url})\n`;
+  return { url, markdown: `\n📋 **Details:** [View full comparison](${url})\n` };
 }
 
 /**
  * Build the full PR comment body and summary
- * 
- * @param {Object} comparison - Result from compareTestRuns()
+ *
+ * @param {Object} comparison - sparql11 comparison (drives verdict)
  * @param {string} websiteUrl - URL to the conformance website
  * @param {number|string|null} currentRunId - Current run ID
  * @param {number|string|null} previousRunId - Previous/master run ID
+ * @param {Array} suiteStats - Per-suite stats from calculateSuiteStats()
+ * @param {Object} suiteComparisons - Map of suiteKey → compareTestRuns() result
  * @returns {{ body: string, summary: string }}
  */
-export function buildCommentBody(comparison, websiteUrl, currentRunId, previousRunId, suiteStats = []) {
+export function buildCommentBody(comparison, websiteUrl, currentRunId, previousRunId, suiteStats = [], suiteComparisons = {}) {
   let body = '';
 
   body += generateOverviewTable(comparison, suiteStats);
@@ -152,16 +163,47 @@ export function buildCommentBody(comparison, websiteUrl, currentRunId, previousR
   const verdict = generateVerdict(comparison);
   body += verdict.markdown;
 
-  if (comparison.hasChanges) {
-    body += generateChangesTable(comparison);
+  const detailsLink = generateDetailsLink(websiteUrl, currentRunId, previousRunId);
+
+  const suiteSortComparator = (a, b) => {
+    const rank = k => k === 'sparql11' ? 0 : k === 'sparql10' ? 1 : 2;
+    const ra = rank(a), rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
+  };
+  const suiteEntries = Object.entries(suiteComparisons).sort(([a], [b]) => suiteSortComparator(a, b));
+  if (suiteEntries.length > 0) {
+    const changedEntries = suiteEntries.filter(([, c]) => c.hasChanges);
+    if (changedEntries.length === 0) {
+      body += 'No test result changes.\n\n';
+    } else {
+      const hasRegression = ([, c]) => (c.pToF?.length ?? 0) > 0 || (c.iToF?.length ?? 0) > 0;
+      const regressionEntries = changedEntries.filter(hasRegression);
+      const improvementEntries = changedEntries.filter(e => !hasRegression(e));
+
+      let truncated = false;
+      for (const [suiteKey, suiteComparison] of [...regressionEntries, ...improvementEntries]) {
+        const table = generateChangesTable(suiteComparison, suiteKey);
+        if (body.length + table.length + detailsLink.markdown.length > COMMENT_CHAR_LIMIT) {
+          truncated = true;
+          break;
+        }
+        body += table;
+      }
+      if (truncated) {
+        body += `\n_Some change tables omitted — [view full details](${detailsLink.url})_\n\n`;
+      }
+    }
   } else {
-    body += 'No test result changes.\n\n';
+    // Backward-compat: caller did not pass suiteComparisons
+    if (comparison.hasChanges) {
+      body += generateChangesTable(comparison, 'sparql11');
+    } else {
+      body += 'No test result changes.\n\n';
+    }
   }
 
-  body += generateDetailsLink(websiteUrl, currentRunId, previousRunId);
+  body += detailsLink.markdown;
 
-  return {
-    body,
-    summary: verdict.summary
-  };
+  return { body, summary: verdict.summary };
 }

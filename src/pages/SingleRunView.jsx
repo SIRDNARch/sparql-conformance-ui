@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
 import { extractTestRows, getFullTestData } from '../utils/extractRows';
-import { normalizeDisplayValue } from '../utils/displayMappings';
+import { normalizeDisplayValue, suiteSortComparator } from '../utils/displayMappings';
 import TestDetails from '../components/TestDetails';
 import CommitShaLink from '../components/CommitShaLink';
 import RunStatsDisplay from '../components/RunStatsDisplay';
@@ -131,7 +131,7 @@ export default function SingleRunView() {
     if (!testName) return;
     const fullTestData = getFullTestData(run.results_json, suite, testName);
     if (fullTestData) {
-      setSelectedTest({ ...fullTestData, testName });
+      setSelectedTest({ ...fullTestData, testName, suite });
     }
   }, [run]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -226,7 +226,7 @@ export default function SingleRunView() {
       ? getFullTestData(run.results_json, row.suite, row.testName)
       : null;
     if (fullTestData) {
-      setSelectedTest({ ...fullTestData, testName: row.testName });
+      setSelectedTest({ ...fullTestData, testName: row.testName, suite: row.suite });
       setSearchParams({ test: row.testName, suite: row.suite ?? '' }, { replace: true });
     }
   };
@@ -242,7 +242,7 @@ export default function SingleRunView() {
     intended: testData.filter(t => t.status === 'Intended deviation').length,
   };
 
-  const suiteStats = [...distinctSuites].sort().map(suite => ({
+  const suiteStats = [...distinctSuites].sort(suiteSortComparator).map(suite => ({
     suite,
     total:    testData.filter(t => t.suite === suite).length,
     passed:   testData.filter(t => t.suite === suite && t.status === 'Passed').length,
@@ -431,10 +431,10 @@ export default function SingleRunView() {
               <tbody className="divide-y divide-gray-200">
                 {filteredData.map((row, idx) => (
                   <tr
-                    key={row.testName}
+                    key={`${row.suite}:${row.testName}`}
                     onClick={() => handleRowClick(row)}
                     className={`cursor-pointer hover:bg-blue-50 transition-colors ${
-                      selectedTest?.testName === row.testName ? 'bg-blue-50' : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      selectedTest?.suite === row.suite && selectedTest?.testName === row.testName ? 'bg-blue-50' : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}
                   >
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{row.testName}</td>
@@ -525,25 +525,24 @@ function FilterRow({ label, filterKey, selectedValues, allOptions, availableOpti
             <button
               type="button"
               onClick={() => {
-                const selectableOptions = allOptions.filter(opt => availableOptions.has(opt));
-                if (selectedValues.size === selectableOptions.length && selectableOptions.length > 0) {
-                  // Clear all
-                  selectableOptions.forEach(opt => onChange(filterKey, opt));
-                } else {
-                  // Select all available
-                  selectableOptions.forEach(opt => {
-                    if (!selectedValues.has(opt)) onChange(filterKey, opt);
+                if (selectedValues.size > 0) {
+                  allOptions.forEach(opt => {
+                    if (selectedValues.has(opt)) onChange(filterKey, opt);
                   });
+                } else {
+                  allOptions
+                    .filter(opt => availableOptions.has(opt))
+                    .forEach(opt => onChange(filterKey, opt));
                 }
               }}
-              disabled={availableCount === 0}
+              disabled={selectedValues.size === 0 && availableCount === 0}
               className={`text-xs font-medium ${
-                availableCount === 0 
-                  ? 'text-gray-400 cursor-not-allowed' 
+                selectedValues.size === 0 && availableCount === 0
+                  ? 'text-gray-400 cursor-not-allowed'
                   : 'text-blue-600 hover:text-blue-800'
               }`}
             >
-              {selectedValues.size > 0 && selectedValues.size === availableCount ? 'Clear' : 'All'}
+              {selectedValues.size > 0 ? 'Clear' : 'All'}
             </button>
           )}
         </div>

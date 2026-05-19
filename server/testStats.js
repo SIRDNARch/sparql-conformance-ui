@@ -74,7 +74,13 @@ export function calculateSuiteStats(resultsJson) {
     suiteMap['sparql11'] = stats;
   }
 
+  const suiteSortComparator = (a, b) => {
+    const rank = k => k === 'sparql11' ? 0 : k === 'sparql10' ? 1 : 2;
+    const ra = rank(a), rb = rank(b);
+    if (ra !== rb) return ra - rb;
+    return a.localeCompare(b);
+  };
   return Object.entries(suiteMap)
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => suiteSortComparator(a, b))
     .map(([suite, s]) => ({ suite, total: s.total, passed: s.passed, failed: s.failed, intended: s.intended }));
 }

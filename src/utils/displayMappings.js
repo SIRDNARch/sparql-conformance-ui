@@ -25,7 +25,6 @@ const mappings = {
   suite: {
     'sparql11': 'SPARQL 1.1',
     'sparql10': 'SPARQL 1.0',
-    'custom': 'Custom',
   },
 };
 
@@ -37,8 +36,20 @@ const mappings = {
  * @param {string} value - The raw value from the JSON
  * @returns {string} The normalized display value
  */
+export function suiteSortComparator(a, b) {
+  const rank = k => k === 'sparql11' ? 0 : k === 'sparql10' ? 1 : 2;
+  const ra = rank(a), rb = rank(b);
+  if (ra !== rb) return ra - rb;
+  return a.localeCompare(b);
+}
+
 export function normalizeDisplayValue(field, value) {
   const fieldMappings = mappings[field];
   if (!fieldMappings) return value;
-  return fieldMappings[value] ?? value;
+  const mapped = fieldMappings[value];
+  if (mapped !== undefined) return mapped;
+  if (field === 'suite') {
+    return value.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+  return value;
 }
