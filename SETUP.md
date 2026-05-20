@@ -1,6 +1,5 @@
-# Setup and Hosting Guide
-
-This guide explains how to run and host:
+# Setup and Hosting
+Explaining the two modes and how to setup the GitHub-App:
 
 - **Public mode** (website + read API + separate upload API)
 - **Private mode** (local/private viewer with optional auto-import)
@@ -31,6 +30,7 @@ Runs two services:
 - `api-private` (read + upload API)
 
 Use this for local/private analysis with mounted result files.
+This is used in qlever-control for the visualize command.
 
 ---
 
@@ -85,7 +85,7 @@ LOG_LEVEL=info
 
 Notes:
 
-- In private mode, GitHub App integration is disabled by design.
+- In private mode, GitHub App integration is disabled.
 - `GITHUB_APP_PRIVATE_KEY` can be plain PEM text **or** base64-encoded PEM.
 - `GITHUB_REPO_OWNER` and `GITHUB_REPO_NAME` are recommended defaults when running GitHub integration.
 
@@ -246,19 +246,7 @@ curl -X POST "https://upload.conformance.example.com/api/upload" \
 ```
 
 ---
-
-## 8) Recommended Production Topology
-
-- `web` (`8080`) behind reverse proxy + TLS (public)
-- `uploader` (`3001`) private/internal or IP-restricted
-- persistent Docker volume for DB (`db_data`)
-- regular DB backups
-
-If running both modes on one host, keep separate ports/domains and separate DB volumes (`db_data` vs `db_data_private`).
-
----
-
-## 9) Operations
+## 8) Operations
 
 ### Check running services
 
@@ -288,8 +276,6 @@ docker compose --profile private down
 
 ---
 
-## 10) Common Issues
-
 ### "Endpoint is not available in the current API surface mode"
 
 You are calling an endpoint disabled for that service (`read` vs `upload` API surface).
@@ -302,17 +288,3 @@ You are calling an endpoint disabled for that service (`read` vs `upload` API su
 
 Check all GitHub App envs and ensure app is installed on the target repo/org.
 
-### Private mode imported files but UI seems empty
-
-Confirm you are opening the private website (`:8081`) and not the public one (`:8080`).
-
----
-
-## 11) Security Checklist
-
-- Use strong `API_KEY`
-- Keep `GITHUB_APP_PRIVATE_KEY` secret
-- Restrict uploader network exposure
-- Enable TLS in front of public endpoints
-- Rotate secrets periodically
-- Back up DB volumes regularly
