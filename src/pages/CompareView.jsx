@@ -353,6 +353,17 @@ export default function CompareView() {
     });
   };
 
+  const handleCellFilterClick = (filterKey, value) => {
+    if (!value || value === '' || value === '-' || value === 'N/A') return;
+    setFilters(prev => {
+      const cur = prev[filterKey];
+      if (cur.size === 1 && cur.has(value)) {
+        return { ...prev, [filterKey]: new Set() };
+      }
+      return { ...prev, [filterKey]: new Set([value]) };
+    });
+  };
+
   const handleRowClick = (row) => {
     const test1Raw = run1?.results_json
       ? getFullTestData(run1.results_json, row.suite, row.testName)
@@ -599,25 +610,55 @@ export default function CompareView() {
                 {filteredData.map((row, idx) => (
                   <tr
                     key={`${row.suite}:${row.testName}`}
-                    onClick={() => handleRowClick(row)}
-                    className={`cursor-pointer hover:bg-blue-50 transition-colors ${
+                    className={`transition-colors ${
                       selectedTest?.suite === row.suite && selectedTest?.testName === row.testName ? 'bg-blue-50' : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}
                   >
-                    <td className="px-2 py-2 text-sm font-medium text-gray-900">{row.testName}</td>
+                    <td
+                      onClick={() => handleRowClick(row)}
+                      className="px-2 py-2 text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-700 hover:underline"
+                    >{row.testName}</td>
                     {showSuiteFilter && (
-                      <td className="px-2 py-2 text-sm text-gray-600">{normalizeDisplayValue('suite', row.suite)}</td>
+                      <td
+                        onClick={() => handleCellFilterClick('suite', row.suite)}
+                        className="px-2 py-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                        title="Filter by this suite"
+                      >{normalizeDisplayValue('suite', row.suite)}</td>
                     )}
-                    <td className="px-2 py-2 text-sm text-gray-600">{row.group}</td>
-                    <td className="px-2 py-2 text-sm text-gray-600">{row.type}</td>
-                    <td className="px-2 py-2">
+                    <td
+                      onClick={() => handleCellFilterClick('group', row.group)}
+                      className="px-2 py-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                      title="Filter by this group"
+                    >{row.group}</td>
+                    <td
+                      onClick={() => handleCellFilterClick('type', row.type)}
+                      className="px-2 py-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                      title="Filter by this type"
+                    >{row.type}</td>
+                    <td
+                      onClick={() => handleCellFilterClick('status1', row.status1)}
+                      className="px-2 py-2 cursor-pointer"
+                      title="Filter by this status (newer)"
+                    >
                       <StatusBadge status={row.status1} />
                     </td>
-                    <td className="px-2 py-2">
+                    <td
+                      onClick={() => handleCellFilterClick('status2', row.status2)}
+                      className="px-2 py-2 cursor-pointer"
+                      title="Filter by this status (baseline)"
+                    >
                       <StatusBadge status={row.status2} />
                     </td>
-                    <td className="px-2 py-2 text-sm text-gray-600">{row.errorType1 || '-'}</td>
-                    <td className="px-2 py-2">
+                    <td
+                      onClick={() => handleCellFilterClick('errorType1', row.errorType1)}
+                      className="px-2 py-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                      title="Filter by this error type"
+                    >{row.errorType1 || '-'}</td>
+                    <td
+                      onClick={() => handleCellFilterClick('changeType', row.changeType)}
+                      className="px-2 py-2 cursor-pointer"
+                      title="Filter by this change type"
+                    >
                       <ChangeBadge changeType={row.changeType} />
                     </td>
                   </tr>
@@ -850,7 +891,6 @@ function ChangeBadge({ changeType }) {
 // Filter Row Component - Column name on left, checkboxes on right
 function FilterRow({ label, filterKey, selectedValues, allOptions, availableOptions, onChange, displayValue }) {
   const hasOptions = allOptions.length > 0;
-  const availableCount = availableOptions.size;
   
   return (
     <div className="flex items-start gap-4 py-2 border-b border-gray-100 last:border-b-0">
@@ -860,29 +900,32 @@ function FilterRow({ label, filterKey, selectedValues, allOptions, availableOpti
           <label className="text-sm font-medium text-gray-900">
             {label}
           </label>
-          {/* Select All / Clear All button next to label */}
-          {hasOptions && (
+          {/* Select All / Clear buttons */}
+          {hasOptions && selectedValues.size === 0 && (
             <button
               type="button"
               onClick={() => {
-                if (selectedValues.size > 0) {
-                  allOptions.forEach(opt => {
-                    if (selectedValues.has(opt)) onChange(filterKey, opt);
-                  });
-                } else {
-                  allOptions
-                    .filter(opt => availableOptions.has(opt))
-                    .forEach(opt => onChange(filterKey, opt));
-                }
+                allOptions
+                  .filter(opt => availableOptions.has(opt))
+                  .forEach(opt => onChange(filterKey, opt));
               }}
-              disabled={selectedValues.size === 0 && availableCount === 0}
-              className={`text-xs font-medium ${
-                selectedValues.size === 0 && availableCount === 0
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-blue-600 hover:text-blue-800'
-              }`}
+              disabled={availableOptions.size === 0}
+              className="text-xs font-medium text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed"
             >
-              {selectedValues.size > 0 ? 'Clear' : 'All'}
+              Select All
+            </button>
+          )}
+          {hasOptions && selectedValues.size > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                allOptions.forEach(opt => {
+                  if (selectedValues.has(opt)) onChange(filterKey, opt);
+                });
+              }}
+              className="text-xs font-medium text-blue-600 hover:text-blue-800"
+            >
+              Clear
             </button>
           )}
         </div>
