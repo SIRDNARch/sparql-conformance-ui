@@ -10,7 +10,7 @@ import { createGunzip, gzipSync, gunzipSync } from 'zlib';
 import { join, dirname, basename, relative } from 'path';
 import { fileURLToPath } from 'url';
 import config from './config.js';
-import { isGitHubAppEnabled, processTestRun, verifyAuthentication } from './github.js';
+import { isGitHubAppEnabled, processTestRun, verifyAuthentication, verifyAndCacheAuth, getGitHubAppStatus } from './github.js';
 import { calculateTestStats, calculateSuiteStats } from './testStats.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -741,12 +741,27 @@ fastify.post('/api/upload', {
  * Health check endpoint
  */
 fastify.get('/health', async () => {
-  return { 
-    status: 'ok', 
+  const ghStatus = getGitHubAppStatus();
+
+  let githubApp;
+  if (!isGitHubAppEnabled()) {
+    githubApp = 'not_configured';
+  } else if (!ghStatus.checked) {
+    githubApp = 'configured_not_verified';
+  } else if (ghStatus.working) {
+    githubApp = 'working';
+  } else {
+    githubApp = 'error';
+  }
+
+  return {
+    status: 'ok',
     timestamp: new Date().toISOString(),
     mode: config.appMode,
     api_surface: config.apiSurface,
-    github_app_configured: isGitHubAppEnabled()
+    github_app: githubApp,
+    ...(ghStatus.appName && { github_app_name: ghStatus.appName }),
+    ...(ghStatus.error && { github_app_error: ghStatus.error }),
   };
 });
 
@@ -1175,6 +1190,10 @@ const start = async () => {
   try {
     if (config.isPrivateMode && config.privateAutoImport) {
       await importLocalResultsDirectory(config.localResultsDir);
+    }
+
+    if (isGitHubAppEnabled()) {
+      await verifyAndCacheAuth((msg) => fastify.log.info(msg));
     }
 
     await fastify.listen({ port: config.port, host: config.host });

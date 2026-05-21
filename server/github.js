@@ -1,6 +1,6 @@
 /**
  * GitHub App Service
- * 
+ *
  * Handles GitHub App authentication, PR comments, and Check Runs.
  */
 
@@ -8,10 +8,41 @@ import config from './config.js';
 
 let octokitInstance = null;
 
+// Cached result of the startup auth check, surfaced in /health
+const githubAppStatus = {
+  checked: false,
+  working: false,
+  appName: null,
+  error: null,
+  checkedAt: null,
+};
+
+export function getGitHubAppStatus() {
+  return { ...githubAppStatus };
+}
+
+function logPrivateKeyDiagnostics(key) {
+  const newlineCount = (key.match(/\n/g) || []).length;
+  const hasLiteralBackslashN = key.includes('\\n');
+  const isRsa = key.includes('BEGIN RSA PRIVATE KEY');
+  const isPkcs8 = key.includes('BEGIN PRIVATE KEY');
+
+  console.error('[GitHub App] Private key diagnostics:');
+  console.error(`  Format : ${isRsa ? 'PKCS#1 (RSA)' : isPkcs8 ? 'PKCS#8' : 'unknown'}`);
+  console.error(`  Actual newlines : ${newlineCount}`);
+  console.error(`  Literal \\n present : ${hasLiteralBackslashN}`);
+
+  if (newlineCount < 2 && !hasLiteralBackslashN) {
+    console.error('[GitHub App] Key is missing line breaks — PEM requires ~64-char lines.');
+    console.error('[GitHub App] Fix: in your .env file store the key with \\n between lines, e.g.:');
+    console.error('[GitHub App]   GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\\nMIIE...\\n-----END RSA PRIVATE KEY-----"');
+  }
+}
+
 /**
  * Get or create an authenticated Octokit instance
  * Uses lazy initialization to avoid loading dependencies if not needed
- * 
+ *
  * @returns {Promise<import('@octokit/rest').Octokit>}
  */
 async function getOctokit() {
@@ -36,6 +67,43 @@ async function getOctokit() {
   });
 
   return octokitInstance;
+}
+
+/**
+ * Verify GitHub App authentication against the real GitHub API and cache the result.
+ * Called once at startup so /health can report the actual working state.
+ */
+export async function verifyAndCacheAuth(log = console.log) {
+  if (!config.isGitHubAppConfigured) return;
+
+  try {
+    const octokit = await getOctokit();
+    const { data } = await octokit.rest.apps.getAuthenticated();
+
+    githubAppStatus.checked = true;
+    githubAppStatus.working = true;
+    githubAppStatus.appName = data.name;
+    githubAppStatus.error = null;
+    githubAppStatus.checkedAt = new Date().toISOString();
+
+    log(`[GitHub App] Authenticated as "${data.name}" (id: ${data.id})`);
+  } catch (error) {
+    // Reset the cached instance so the next attempt rebuilds it
+    octokitInstance = null;
+
+    githubAppStatus.checked = true;
+    githubAppStatus.working = false;
+    githubAppStatus.appName = null;
+    githubAppStatus.error = error.message;
+    githubAppStatus.checkedAt = new Date().toISOString();
+
+    if (error.message.includes('DECODER') || error.message.includes('unsupported')) {
+      console.error('[GitHub App] Authentication failed — private key cannot be decoded by OpenSSL.');
+      logPrivateKeyDiagnostics(config.githubPrivateKey || '');
+    } else {
+      console.error(`[GitHub App] Authentication failed: ${error.message}`);
+    }
+  }
 }
 
 /**
