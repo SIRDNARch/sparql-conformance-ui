@@ -17,6 +17,7 @@ function classifyTest(test, stats) {
   const errorType = String(test.errorType || '').toLowerCase();
   const isIntended = (
     status === 'intended' ||
+    status === 'intended deviation' ||
     status === 'failed: intended' ||
     errorType.includes('intended') ||
     test.intended === true
@@ -24,9 +25,9 @@ function classifyTest(test, stats) {
 
   if (status === 'passed' || status === 'pass') {
     stats.passed += 1;
-  } else if (status === 'skipped' || status === 'skip') {
+  } else if (status === 'skipped' || status === 'skip' || status === 'not tested') {
     stats.skipped += 1;
-  } else if (status === 'failed' || status === 'fail' || status === 'failed: intended' || status === 'intended') {
+  } else if (status === 'failed' || status === 'fail' || status === 'failed: intended' || status === 'intended' || status === 'intended deviation') {
     if (isIntended) {
       stats.intended += 1;
     } else {
