@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS } from '../config/api';
+import CommitShaLink from '../components/CommitShaLink';
 import RunStatsDisplay from '../components/RunStatsDisplay';
 
 export default function ManualEngineRunsPage() {
@@ -56,7 +57,7 @@ export default function ManualEngineRunsPage() {
   };
 
   return (
-    <div className="py-8 px-4 pb-20">
+    <div className="max-w-[800px] mx-auto py-8 px-4 pb-20">
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -126,9 +127,13 @@ export default function ManualEngineRunsPage() {
                         </div>
 
                         <div className="flex items-center gap-3 mb-2">
-                          <code className="text-sm text-gray-600 font-mono">
-                            {run.commit_sha ? run.commit_sha.substring(0, 8) : 'no-sha'}
-                          </code>
+                          <CommitShaLink
+                            repoFullName={run.repo_full_name}
+                            commitSha={run.commit_sha}
+                            stopPropagation={true}
+                            linkClassName="text-sm text-blue-700 hover:text-blue-900 hover:underline font-mono"
+                            codeClassName="text-sm text-gray-600 font-mono"
+                          />
                           <span className="text-sm text-gray-500">
                             {run.repo_full_name}
                           </span>
@@ -146,7 +151,12 @@ export default function ManualEngineRunsPage() {
                           {new Date(run.created_at).toLocaleString('en-GB')}
                         </span>
                         {isSelected && (
-                          <span className="text-blue-600 text-sm font-medium">Selected</span>
+                          <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            Selected
+                          </div>
                         )}
                       </div>
                     </div>
@@ -159,7 +169,7 @@ export default function ManualEngineRunsPage() {
 
       {selectedRuns.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-blue-600 text-white shadow-lg">
-          <div className="max-w-[1000px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="max-w-[800px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
               <span className="font-medium shrink-0">
                 {selectedRuns.length} run{selectedRuns.length !== 1 ? 's' : ''} selected
