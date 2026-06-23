@@ -66,7 +66,7 @@ export default function MultiSelect({
                         checked ? next.delete(v) : next.add(v);
                         onChange?.(next);
                       }}
-                      className="h-4 w-4 accent-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="h-4 w-4 accent-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
                     />
                     <label
                       htmlFor={id}

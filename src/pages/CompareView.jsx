@@ -443,7 +443,7 @@ export default function CompareView() {
     <div className="p-6">
         {/* Back Link */}
         <div className="mb-6">
-          <Link to={backPath} className="text-blue-600 hover:underline inline-block">
+          <Link to={backPath} className="px-4 py-2 rounded-xl bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 inline-block">
             ← Back to Search
           </Link>
         </div>
@@ -476,7 +476,7 @@ export default function CompareView() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm mb-6 max-w-[700px] mx-auto">
+        <div className="bg-white rounded-xl shadow-sm mb-6">
           {/* Filter Header - Collapsible */}
           <div 
             className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
@@ -616,47 +616,47 @@ export default function CompareView() {
                   >
                     <td
                       onClick={() => handleRowClick(row)}
-                      className="px-2 py-2 text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-700 hover:underline"
+                      className="px-4 py-3 text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-700 hover:underline"
                     >{row.testName}</td>
                     {showSuiteFilter && (
                       <td
                         onClick={() => handleCellFilterClick('suite', row.suite)}
-                        className="px-2 py-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                        className="px-4 py-3 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
                         title="Filter by this suite"
                       >{normalizeDisplayValue('suite', row.suite)}</td>
                     )}
                     <td
                       onClick={() => handleCellFilterClick('group', row.group)}
-                      className="px-2 py-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                      className="px-4 py-3 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
                       title="Filter by this group"
                     >{row.group}</td>
                     <td
                       onClick={() => handleCellFilterClick('type', row.type)}
-                      className="px-2 py-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                      className="px-4 py-3 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
                       title="Filter by this type"
                     >{row.type}</td>
                     <td
                       onClick={() => handleCellFilterClick('status1', row.status1)}
-                      className="px-2 py-2 cursor-pointer"
+                      className="px-4 py-3 cursor-pointer"
                       title="Filter by this status (newer)"
                     >
                       <StatusBadge status={row.status1} />
                     </td>
                     <td
                       onClick={() => handleCellFilterClick('status2', row.status2)}
-                      className="px-2 py-2 cursor-pointer"
+                      className="px-4 py-3 cursor-pointer"
                       title="Filter by this status (baseline)"
                     >
                       <StatusBadge status={row.status2} />
                     </td>
                     <td
                       onClick={() => handleCellFilterClick('errorType1', row.errorType1)}
-                      className="px-2 py-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
+                      className="px-4 py-3 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
                       title="Filter by this error type"
                     >{row.errorType1 || '-'}</td>
                     <td
                       onClick={() => handleCellFilterClick('changeType', row.changeType)}
-                      className="px-2 py-2 cursor-pointer"
+                      className="px-4 py-3 cursor-pointer"
                       title="Filter by this change type"
                     >
                       <ChangeBadge changeType={row.changeType} />
@@ -830,7 +830,7 @@ function TableHeader({ label, sortKey, sortConfig, onSort }) {
   return (
     <th
       onClick={() => onSort(sortKey)}
-      className="px-2 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+      className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
     >
       <div className="flex items-center gap-2">
         {label}

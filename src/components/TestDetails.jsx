@@ -67,7 +67,6 @@ export default function TestDetails({ test, onClose }) {
           {entries.map((entry, index) => {
             // Skip if no value
             if (!entry.value && entry.value !== 0 && entry.value !== false) {
-              console.log(entry);
               return null;
             }
 

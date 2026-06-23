@@ -300,7 +300,7 @@ export default function SingleRunView() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <Link to={backPath} className="text-blue-600 hover:underline">
+            <Link to={backPath} className="px-4 py-2 rounded-xl bg-white border border-gray-300 text-gray-700 hover:bg-gray-100">
               ← Back to Search
             </Link>
             {latestMaster && latestMaster.id !== parseInt(id) && (
@@ -329,7 +329,7 @@ export default function SingleRunView() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm mb-6 max-w-[700px] mx-auto">
+        <div className="bg-white rounded-xl shadow-sm mb-6">
           {/* Filter Header - Always Visible */}
           <div 
             className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"

@@ -840,10 +840,10 @@ fastify.get('/api/search', {
     if (isNumber) {
       // Search by PR number (exact match)
       const prNumber = parseInt(searchTerm, 10);
-      let sql = `SELECT 
+      let sql = `SELECT
         id, repo_full_name, run_title, commit_sha, engine_name, engine_version, pr_number, ref_name, head_ref, ref_kind,
         workflow_run_id, total, passed, failed, intended, skipped,
-        artifact_url, created_at
+        suite_stats, artifact_url, created_at
        FROM test_suite_runs
        WHERE pr_number = ?`;
       const params = [prNumber];
@@ -863,10 +863,10 @@ fastify.get('/api/search', {
       // Search by commit SHA (partial match) or ref name (partial match)
       // Use LIKE for case-insensitive partial matching
       const likePattern = `%${searchTerm}%`;
-      let sql = `SELECT 
+      let sql = `SELECT
           id, repo_full_name, run_title, commit_sha, engine_name, engine_version, pr_number, ref_name, head_ref, ref_kind,
           workflow_run_id, total, passed, failed, intended, skipped,
-          artifact_url, created_at
+          suite_stats, artifact_url, created_at
          FROM test_suite_runs
         WHERE (commit_sha LIKE ? OR ref_name LIKE ? OR head_ref LIKE ? OR run_title LIKE ? OR engine_name LIKE ? OR engine_version LIKE ?)
       `;
@@ -885,7 +885,10 @@ fastify.get('/api/search', {
       results = stmt.all(...params);
     }
 
-    // Return results with metadata
+    for (const row of results) {
+      row.suite_stats = row.suite_stats ? JSON.parse(row.suite_stats) : [];
+    }
+
     return {
       query: searchTerm,
       count: results.length,
