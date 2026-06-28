@@ -353,17 +353,6 @@ export default function CompareView() {
     });
   };
 
-  const handleCellFilterClick = (filterKey, value) => {
-    if (!value || value === '' || value === '-' || value === 'N/A') return;
-    setFilters(prev => {
-      const cur = prev[filterKey];
-      if (cur.size === 1 && cur.has(value)) {
-        return { ...prev, [filterKey]: new Set() };
-      }
-      return { ...prev, [filterKey]: new Set([value]) };
-    });
-  };
-
   const handleRowClick = (row) => {
     const test1Raw = run1?.results_json
       ? getFullTestData(run1.results_json, row.suite, row.testName)
@@ -610,54 +599,40 @@ export default function CompareView() {
                 {filteredData.map((row, idx) => (
                   <tr
                     key={`${row.suite}:${row.testName}`}
-                    className={`transition-colors ${
+                    onClick={() => handleRowClick(row)}
+                    className={`transition-colors cursor-pointer ${
                       selectedTest?.suite === row.suite && selectedTest?.testName === row.testName ? 'bg-blue-50' : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                     }`}
                   >
                     <td
-                      onClick={() => handleRowClick(row)}
-                      className="px-4 py-3 text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-700 hover:underline"
+                      className="px-4 py-3 text-sm font-medium text-gray-900 hover:text-blue-700 hover:underline"
                     >{row.testName}</td>
                     {showSuiteFilter && (
                       <td
-                        onClick={() => handleCellFilterClick('suite', row.suite)}
-                        className="px-4 py-3 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
-                        title="Filter by this suite"
+                        className="px-4 py-3 text-sm text-gray-600"
                       >{normalizeDisplayValue('suite', row.suite)}</td>
                     )}
                     <td
-                      onClick={() => handleCellFilterClick('group', row.group)}
-                      className="px-4 py-3 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
-                      title="Filter by this group"
+                      className="px-4 py-3 text-sm text-gray-600"
                     >{row.group}</td>
                     <td
-                      onClick={() => handleCellFilterClick('type', row.type)}
-                      className="px-4 py-3 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
-                      title="Filter by this type"
+                      className="px-4 py-3 text-sm text-gray-600"
                     >{row.type}</td>
                     <td
-                      onClick={() => handleCellFilterClick('status1', row.status1)}
-                      className="px-4 py-3 cursor-pointer"
-                      title="Filter by this status (newer)"
+                      className="px-4 py-3"
                     >
                       <StatusBadge status={row.status1} />
                     </td>
                     <td
-                      onClick={() => handleCellFilterClick('status2', row.status2)}
-                      className="px-4 py-3 cursor-pointer"
-                      title="Filter by this status (baseline)"
+                      className="px-4 py-3"
                     >
                       <StatusBadge status={row.status2} />
                     </td>
                     <td
-                      onClick={() => handleCellFilterClick('errorType1', row.errorType1)}
-                      className="px-4 py-3 text-sm text-gray-600 cursor-pointer hover:text-blue-600"
-                      title="Filter by this error type"
+                      className="px-4 py-3 text-sm text-gray-600"
                     >{row.errorType1 || '-'}</td>
                     <td
-                      onClick={() => handleCellFilterClick('changeType', row.changeType)}
-                      className="px-4 py-3 cursor-pointer"
-                      title="Filter by this change type"
+                      className="px-4 py-3"
                     >
                       <ChangeBadge changeType={row.changeType} />
                     </td>

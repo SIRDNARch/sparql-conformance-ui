@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getOverviewEntries, getAllEntries } from '../utils/testDetailsHelpers';
 import { StatusBadge, CloseButton, TabsAndToggles } from './TestDetailsUI';
 import FieldValueRenderer from './FieldValueRenderer';
@@ -12,6 +12,7 @@ export default function TestDetails({ test, onClose }) {
   const [toggleMatching, setToggleMatching] = useState(false);
   const [toggleIntended, setToggleIntended] = useState(false);
   const [copied, setCopied] = useState(false);
+  const containerRef = useRef(null);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -19,9 +20,10 @@ export default function TestDetails({ test, onClose }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Reset tab when test changes
+  // Reset tab and scroll the panel into view when test changes
   useEffect(() => {
     setActiveTab('overview');
+    containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [test?.testName]);
 
   if (!test) return null;
@@ -31,7 +33,7 @@ export default function TestDetails({ test, onClose }) {
     : getAllEntries(test);
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 mt-6">
+    <div ref={containerRef} className="bg-white rounded-xl shadow-lg border border-gray-200 mt-6">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b bg-gray-50">
         <div>

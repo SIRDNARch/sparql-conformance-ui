@@ -61,10 +61,10 @@ export default function ManualEngineRunsPage() {
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Standard Conformance of Other Engines
+              Standard Conformance Results
             </h1>
             <p className="text-gray-600">
-              Manually uploaded engine runs (curl + API key) are listed here.
+              Manually uploaded engine results are listed here.
             </p>
           </div>
           <Link
