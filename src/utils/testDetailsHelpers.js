@@ -126,6 +126,12 @@ export function getOverviewEntries(test) {
       key: "responseExtracted",
       isHtml: false
     });
+    entries.push({
+      label: "Not Matching",
+      value: test.notMatching,
+      key: "notMatching",
+      isHtml: false
+    });
   }
 
   // Add error-specific entries
