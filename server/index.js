@@ -331,10 +331,10 @@ async function importLocalResultsDirectory(rootDir) {
   fastify.log.info(`Private mode import finished: ${importedCount} imported, ${failedCount} failed`);
 }
 
-// Register CORS
+// Register CORS — public API: allow any origin. The read API serves public data and uploads
+// are protected by the x-api-key header, not by origin. No credentials are used.
 await fastify.register(cors, {
-  origin: config.corsOrigin,
-  credentials: true
+  origin: '*'
 });
 
 // Register compression for HTTP responses (gzip/brotli)

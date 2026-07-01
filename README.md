@@ -75,15 +75,20 @@ LOCAL_RESULTS_DIR=./public/results docker compose --profile private up --build
 
 ## Key environment variables
 
-- `VITE_API_BASE_URL` — Frontend API base URL
-- `PORT`, `HOST`, `CORS_ORIGIN` — API runtime settings
-- `DB_PATH` — SQLite DB path
-- `API_KEY` — Required for public uploader authentication
-- `APP_MODE` — `public` or `private`
-- `API_SURFACE` — `all`, `read`, or `upload`
-- `LOCAL_RESULTS_DIR` — Private auto-import source directory
-- `PRIVATE_AUTO_IMPORT` — Enable/disable private startup import
+- `VITE_BASE_PATH` — URL path the site is served under: `/` (root/subdomain) or a
+  subpath like `/sparql-conformance-ui-v2/`. The only required frontend var; the API
+  base URL and SPA router basename are derived from it.
+- `API_KEY` — Required in public mode for uploader auth. Any strong random string —
+  generate one with `openssl rand -hex 32`.
+- `WEBSITE_URL` — Optional. Full public URL (e.g. `https://conformance.example.com`),
+  used only for GitHub PR-comment links.
+- `LOCAL_RESULTS_DIR` — Private mode only. Absolute path to the results folder to
+  auto-import (e.g. `/home/me/results`).
+- `LOG_LEVEL` — Optional. Log verbosity: `info` (default) or `debug` to troubleshoot.
 
-For more information about enviroment variables, [.env.example](./.env.example).
+The application mode (`public`/`private`) and endpoint surface are fixed by the
+Docker Compose profile you start, not set via `.env`.
 
-For deployment and GitHub App integration, see [SETUP.md](./SETUP.md).
+Every variable is explained inline in [.env.example](./.env.example). For full
+deployment and GitHub App setup (App ID, installation ID, private key), see
+[SETUP.md](./SETUP.md).

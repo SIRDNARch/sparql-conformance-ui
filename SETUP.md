@@ -42,18 +42,34 @@ Use the template and then edit values:
 cp .env.example .env
 ```
 
-The full variable list is documented in [server/config.js](server/config.js). The most important ones are below.
+Every variable is explained inline in [.env.example](.env.example), including where
+to find each value. The most important ones are summarized below.
+
+### Subpath / subdomain deployment
+
+`VITE_BASE_PATH` is the single frontend knob. The API base URL and the SPA router basename are
+derived from it automatically, so you only set one value:
+
+- Root or dedicated subdomain (e.g. `https://sparql.example.com/`): `VITE_BASE_PATH=/` (default).
+- Subpath (e.g. `https://qlever.dev/sparql-conformance-ui-v2/`):
+  `VITE_BASE_PATH=/sparql-conformance-ui-v2/`.
+
+`VITE_BASE_PATH` is baked in at **build time**, so after changing it rebuild the web image
+(`docker compose --profile public build web`). CORS needs no configuration (the website talks to the
+API same-origin); set `WEBSITE_URL` only if you use the GitHub App and want correct PR-comment links.
 
 ### Minimal `.env` (public)
 
 ```env
-# Required for uploader auth
+# Required for uploader auth. Any strong random string — generate one with:
+#   openssl rand -hex 32
 API_KEY=replace-with-strong-random-key
 
 # Public UI URL used in generated links/comments
 WEBSITE_URL=https://conformance.example.com
 
-# Optional GitHub App integration (set all 3 to enable)
+# Optional GitHub App integration (set all 3 to enable — see section 6 for
+# where to find each value)
 GITHUB_APP_ID=
 GITHUB_APP_PRIVATE_KEY=
 GITHUB_INSTALLATION_ID=
@@ -62,11 +78,10 @@ GITHUB_INSTALLATION_ID=
 LOG_LEVEL=info
 ```
 
-For GitHub App-enabled public deployments, also set:
+For GitHub App-enabled public deployments, you can optionally customize the
+check/comment display names (defaults shown):
 
 ```env
-GITHUB_REPO_OWNER=your-org-or-user
-GITHUB_REPO_NAME=your-repository
 CHECK_NAME=SPARQL 1.1 Conformance Check
 CHECK_TITLE=SPARQL Test Suite
 CHECK_RUNNING_TITLE=Running SPARQL Test Suite
@@ -87,7 +102,6 @@ Notes:
 
 - In private mode, GitHub App integration is disabled.
 - `GITHUB_APP_PRIVATE_KEY` can be plain PEM text **or** base64-encoded PEM.
-- `GITHUB_REPO_OWNER` and `GITHUB_REPO_NAME` are recommended defaults when running GitHub integration.
 
 ---
 
@@ -173,26 +187,34 @@ If you want automatic PR comments and check runs, configure a GitHub App.
 
 ### 6.3 Collect credentials
 
-- `GITHUB_APP_ID` from app settings
-- `GITHUB_INSTALLATION_ID` from the app installation URL
-- `GITHUB_APP_PRIVATE_KEY` from generated private key (PEM file contents)
-- `GITHUB_REPO_OWNER` default owner/org for your target repository
-- `GITHUB_REPO_NAME` default repository name
+You need three values from the app:
 
-Tip: if storing the private key in one line, you can base64-encode it:
+- **`GITHUB_APP_ID`** — on the app's **General** page (Settings → Developer
+  settings → GitHub Apps → *your app*), the **App ID** field. It's a small number,
+  e.g. `123456`.
 
-```bash
-base64 -w0 your-github-app-private-key.pem
-```
+- **`GITHUB_APP_PRIVATE_KEY`** — on the same **General** page, under **Private
+  keys**, click *Generate a private key*. This downloads a `.pem` file. Paste its
+  full contents into the variable. If you need it on one line, base64-encode it and
+  paste that instead:
 
-and paste the output into `GITHUB_APP_PRIVATE_KEY`.
+  ```bash
+  base64 -w0 your-github-app-private-key.pem
+  ```
+
+- **`GITHUB_INSTALLATION_ID`** — open the app's installation settings; the ID is the
+  number at the end of the URL:
+
+  - Personal account: `https://github.com/settings/installations/<INSTALLATION_ID>`
+  - Organization: `https://github.com/organizations/<ORG>/settings/installations/<INSTALLATION_ID>`
+
+  e.g. `987654321`.
 
 ### 6.4 Configure environment
 
 Set these values in `.env`:
 
 - Required for integration: `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_INSTALLATION_ID`
-- Recommended defaults: `GITHUB_REPO_OWNER`, `GITHUB_REPO_NAME`
 - For links in comments/checks: `WEBSITE_URL`
 
 Then restart the public profile:

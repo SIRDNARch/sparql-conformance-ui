@@ -45,18 +45,6 @@ const config = {
     return process.env.HOST || '0.0.0.0';
   },
 
-  get websiteOrigin() {
-    return process.env.WEBSITE_ORIGIN || 'http://localhost:5173';
-  },
-
-  get websiteBasePath() {
-    return normalizeBasePath(process.env.WEBSITE_BASE_PATH || '/');
-  },
-  
-  get corsOrigin() {
-    return process.env.CORS_ORIGIN || this.websiteOrigin;
-  },
-  
   get logLevel() {
     return process.env.LOG_LEVEL || 'info';
   },
@@ -103,23 +91,19 @@ const config = {
     const id = process.env.GITHUB_INSTALLATION_ID;
     return id ? parseInt(id, 10) : null;
   },
-  
-  // Repository defaults (can be overridden per request)
-  get githubRepoOwner() {
-    return process.env.GITHUB_REPO_OWNER || null;
-  },
-  
-  get githubRepoName() {
-    return process.env.GITHUB_REPO_NAME || null;
-  },
-  
+
   // UI and display settings
+  // Public URL of the website, used only for links in GitHub PR comments / check runs.
+  // Set WEBSITE_URL to the full public URL (e.g. https://qlever.dev/sparql-conformance-ui-v2/).
+  // This can't be inferred from an upload request (uploads hit the separate uploader service,
+  // not the website), so when unset we fall back to the base path on a localhost dev origin.
   get websiteUrl() {
     if (process.env.WEBSITE_URL) {
       return process.env.WEBSITE_URL;
     }
 
-    return `${this.websiteOrigin}${this.websiteBasePath}`;
+    const basePath = normalizeBasePath(process.env.WEBSITE_BASE_PATH || '/');
+    return `http://localhost:5173${basePath}`;
   },
   
   get checkName() {
